@@ -28,6 +28,7 @@ class Polygon:
             area -= self.xs[j] * self.ys[i]
         self.area = abs(area) / 2.0
 
+    # Simple random choice = 16.7 s for 100 000 offsprings
     def createOffspring(self):
         newXs = self.xs + np.random.random(len(self.xs))/100
         newYs = self.ys + np.random.random(len(self.ys))/100
