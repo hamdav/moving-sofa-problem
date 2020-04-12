@@ -1,4 +1,6 @@
 import numpy as np
+import LineMath
+
 
 
 class Polygon:
@@ -30,6 +32,69 @@ class Polygon:
 
     # Simple random choice = 16.7 s for 100 000 offsprings
     def createOffspring(self):
-        newXs = self.xs + np.random.random(len(self.xs))/100
-        newYs = self.ys + np.random.random(len(self.ys))/100
+
+        mutationProbabillity = 0.1
+        mutationLength = 0.05
+        n = len(self.xs)
+
+        newXs = np.copy(self.xs)
+        newYs = np.copy(self.ys)
+
+        for pointIndex in range(n):
+            # Decide whether to mutate or not
+            if np.random.random() > mutationProbabillity:
+                continue
+
+            # Move the point a little bit TODO: Better movement
+            oldPoint = np.array([self.xs[pointIndex], self.ys[pointIndex]])
+            newPoint = oldPoint + (np.random.random(2)-0.5) * 2 * mutationLength
+
+            # Check that this does not cross any other line
+            # If not, mutation is valid
+            mutationIsValid = True
+
+            # Name line ending on new point and line beginning on new point
+            # These should not cross any other line
+            lineToMovedPoint   = (np.array([newXs[pointIndex-1],       newYs[pointIndex-1]]), newPoint)
+            lineFromMovedPoint = (np.array([newXs[(pointIndex+1) % n], newYs[(pointIndex+1) % n]]), newPoint)
+
+            # Line checked is the one from otherPointIndex to otherPointIndex - 1.
+            for otherPointIndex in range(n):
+                # If the line checked has moved point as endpoint, ignore.
+                if otherPointIndex == pointIndex or (otherPointIndex - 1) % n == pointIndex:
+                    continue
+
+                # Create the line to be checked
+                lineToCheckIfCrossed = np.array([np.array([newXs[otherPointIndex-1], newYs[otherPointIndex-1]]),
+                                                 np.array([newXs[otherPointIndex], newYs[otherPointIndex]])])
+
+                # if (not LineMath.boxesIntersect(lineToMovedPoint, lineToCheckIfCrossed)) and (not LineMath.boxesIntersect(lineFromMovedPoint, lineToCheckIfCrossed)):
+                    #continue
+
+                # If you got here, they are close. 
+                # Check if the lines intersect, if so, break out of the for otherpoint
+                # If the line to check borders one of the lines from or to the point moved,
+                # don't check if they intersect, cause they will
+
+                # If line borders line to point
+                if otherPointIndex == ((pointIndex -1) % n):
+                    if LineMath.linesIntersect(lineFromMovedPoint, lineToCheckIfCrossed):
+                        mutationIsValid = False
+                        break
+                # If line borders line from point
+                elif ((otherPointIndex - 1) % n) == ((pointIndex +1) % n):
+                    if LineMath.linesIntersect(lineToMovedPoint, lineToCheckIfCrossed):
+                        mutationIsValid = False
+                        break
+                else:
+                    if LineMath.linesIntersect(lineToMovedPoint, lineToCheckIfCrossed) or LineMath.linesIntersect(lineFromMovedPoint, lineToCheckIfCrossed):
+                        mutationIsValid = False
+                        break
+
+
+            if mutationIsValid:
+                newXs[pointIndex] = newPoint[0]
+                newYs[pointIndex] = newPoint[1]
+
         return Polygon(newXs, newYs)
+
