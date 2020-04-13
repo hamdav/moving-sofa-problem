@@ -34,6 +34,8 @@ def moveSequence(p, seq=[], depth=0):
     if isThrough(p):
         return seq
 
+    if (any(np.logical_and(tmP.xs > 0, tmP.ys < 0)) or any(tmP.ys > 1) or any(tmP.xs < -1)):
+        return None
     # Try to scootch
     tmP = deepcopy(p)
     scooched = scooch(tmP, depth)
