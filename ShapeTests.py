@@ -29,7 +29,28 @@ def testShapePlotting():
     plotShape(s, ax)
     plt.show()
 
-testShapePlotting()
+def testAreaFunction():
+    #nodes = [Node([-6,0],1,-1,0)]
+    #nodes.append(Node([0,-3],6,-1,1))
+    #nodes.append(Node([6,0],1,-1,2))
+    #nodes.append(Node([0,-3],1,-1,3))
+    nodes = [Node([-5,5],1,-1,0)]
+    nodes.append(Node([0,10],5,1,4))
+    nodes.append(Node([5,5],1,-1,1))
+    nodes.append(Node([5,-5],1,-1,2))
+    nodes.append(Node([-5,-5],1,-1,3))
+    s = Shape(nodes)
+
+    print(f"The area of the shape is: {s.area}")
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+
+    plotShape(s, ax)
+    plt.show()
+
+testAreaFunction()
 
 def testNodesAndBindingLine():
     node1 = Node([5, 5], 1, 1, 1)

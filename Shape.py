@@ -18,6 +18,7 @@ class Shape:
         self.find_node_angles()
         self.calculateBindingLines()
         self.calculateOrientation()
+        self.calculateArea()
 
     def find_node_angles(self):
         # Sets self.nodeAngles such that self.nodeAngles[ID] is a tuple
@@ -84,7 +85,6 @@ class Shape:
 
             self.lines.append(np.array([linePoint1, linePoint2]))
 
-
     def calculateOrientation(self):
         # Set self.positive orientation to true if the shape is 
         # positively oriented, that is, if the total angle change 
@@ -97,14 +97,53 @@ class Shape:
             # Calculate the angle change due to node
             angleIn, angleOut = self.nodeAngles[node.ID]
             angleChange = (angleOut - angleIn) % (2 * np.pi)
-            print(angleChange *180/np.pi)
             if node.o == 1:
                 cumulative_angle_change += angleChange
             elif node.o == -1:
                 cumulative_angle_change -= (2*np.pi - angleChange)
 
-        print(cumulative_angle_change * 180/np.pi)
-        self.positive_orientation = cumulative_angle_change > 0
+        self.o = 1 if cumulative_angle_change > 0 else -1
 
+    def calculateArea(self):
+        # Calculates the area of the shape
+        # step one: calculate the area of the shape created by the binding lines and the centers of the nodes
+        # Then, add the circle sectors from the circles inside the shape
+        # and subtract the circle sectors on the outside.
 
-    #def calculateArea(self):
+        # Create all of the points for the first shape
+        # Also sum up the circle sector areas
+        points = []
+        circleSectorAreas = 0
+        for node in self.nodes:
+            pos = node.pos
+            angleIn, angleOut = self.nodeAngles[node.ID]
+            deltap1 = node.r * np.array([np.cos(angleIn), np.sin(angleIn)])
+            deltap2 = node.r * np.array([np.cos(angleOut), np.sin(angleOut)])
+
+            points.append(pos + deltap1)
+            points.append(pos)
+            points.append(pos + deltap2)
+
+            # Calculate and add the circle sector area
+            # The angle change is out - in if positively oriented
+            # but in - out if negatively oriented. 
+            deltaAngle = (node.o * (angleOut - angleIn)) % (2*np.pi)
+            # Circle sector should be added if inside and subtracted if
+            # outside
+            circleSectorAreas += self.o * node.o * node.r**2 * deltaAngle / 2
+
+        # Shift points so that first point is at 0,0
+        points = points - points[0]
+        print(f"circleSectorAreas: {circleSectorAreas}")
+
+        # Calculate the area
+        area = 0.0
+        n = len(points)
+        for i in range(n):
+            j = (i + 1) % n
+            area += points[i][0] * points[j][1]
+            area -= points[j][0] * points[i][1]
+        area = abs(area) / 2.0
+
+        # Add the circleSectorAreas
+        self.area = area + circleSectorAreas
