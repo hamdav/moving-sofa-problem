@@ -7,6 +7,12 @@ def boxesIntersect(line1, line2):
     return line1[0][0] <= line2[1][0] and line1[1][0] >= line2[0][0] and line1[0][1] <= line2[1][1] and line1[1][1] >= line2[0][1]
 
 
+def segmentIntersectsArc(line, center, radius, angles):
+    # Returns true if line intersects the arc defined py center
+    # radius and angles, check https://math.stackexchange.com/questions/2744422/line-segment-and-arc-intersection
+    pass
+
+
 def linesIntersect(line1, line2):
     # line arguments are on the form [[p1x, p1y], [p2x, p2y]]
     # The line segments intersect if
