@@ -8,6 +8,7 @@ def boxesIntersect(line1, line2):
 
 
 def linesIntersect(line1, line2):
+    # line arguments are on the form [[p1x, p1y], [p2x, p2y]]
     # The line segments intersect if
     # the scalar product of (the vector from p11 to p21) and (a vector normal to line1) and
     # the scalar product of (the vector from p11 to p22) and (the vector normal to line1)
