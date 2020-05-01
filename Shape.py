@@ -13,14 +13,34 @@ class Node:
 
 
 class Shape:
+    # The shape class consists of nodes with orientations.
+    # These are bound together with lines
+    # The class always contains the following properties
+
+    # self.nodes: list of node objects
+
+    # self.nodeAngles: dictionare with node.ID as keys and 
+    # [angleIn, angleOut] as values. The angles are the angles at which
+    # the incomming and outgoing lines touch the node,
+    # counted positively and from the x axis.
+
+    # self.o: 1 if orientation is positive, -1 if it is negative
+    # orientation is calculated from node angles, if the shape turns
+    # more in the positive direction, its positive and vice versa.
+
+    # self.lines: list of binding lines on the form 
+    # np.array([[[x1,y1], [x2, y2]], [[x1, y1], [x2, y2]], ...])
+
+    # self.area: the area of the shape
+
     def __init__(self, nodes):
         self.nodes = nodes
-        self.find_node_angles()
+        self.findNodeAngles()
         self.calculateBindingLines()
         self.calculateOrientation()
         self.calculateArea()
 
-    def find_node_angles(self):
+    def findNodeAngles(self):
         # Sets self.nodeAngles such that self.nodeAngles[ID] is a tuple
         # of the angle from the x axis that the point at which the
         # (incomming, outgoing) line touches the node
@@ -92,17 +112,17 @@ class Shape:
         # If the shape is positively oriented, ALL nodes with positive
         # orientation are inside the shape and ALL nodes with negative
         # orientation are outside. 
-        cumulative_angle_change = 0
+        cumulativeAngleChange = 0
         for node in self.nodes:
             # Calculate the angle change due to node
             angleIn, angleOut = self.nodeAngles[node.ID]
             angleChange = (angleOut - angleIn) % (2 * np.pi)
             if node.o == 1:
-                cumulative_angle_change += angleChange
+                cumulativeAngleChange += angleChange
             elif node.o == -1:
-                cumulative_angle_change -= (2*np.pi - angleChange)
+                cumulativeAngleChange -= (2*np.pi - angleChange)
 
-        self.o = 1 if cumulative_angle_change > 0 else -1
+        self.o = 1 if cumulativeAngleChange > 0 else -1
 
     def calculateArea(self):
         # Calculates the area of the shape
