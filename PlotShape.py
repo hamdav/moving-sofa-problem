@@ -38,8 +38,10 @@ def binding_line(node1, node2):
     alpha *= -node1.o
     beta *= -node1.o
 
-    linePoint1 = node1.pos + node1.r*np.array([np.cos(alpha+theta), np.sin(alpha+theta)])
-    linePoint2 = node2.pos + node2.r*np.array([np.cos(beta+theta), np.sin(beta+theta)])
+    linePoint1 = node1.pos + node1.r * \
+        np.array([np.cos(alpha+theta), np.sin(alpha+theta)])
+    linePoint2 = node2.pos + node2.r * \
+        np.array([np.cos(beta+theta), np.sin(beta+theta)])
 
     return np.array([linePoint1, linePoint2])
 
