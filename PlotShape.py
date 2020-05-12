@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from LineMath import rotMat
 
 
-def make_artist(node):
+def makeArtist(node, pos=np.array([0, 0]), rot=0):
     # Creates an artist object from node
-    circle = plt.Circle(node.pos, node.r)
-    arrowbase = node.pos + node.r * np.array([0.5 * node.o, 0.5])
+    nodePos = np.matmul(rotMat(rot), node.pos) + pos
+    circle = plt.Circle(nodePos, node.r, fill=False)
+    arrowbase = nodePos + node.r * np.array([0.5 * node.o, 0.5])
     arrowdelta = node.r * np.array([-node.o, 0])
     arrow = plt.Arrow(*arrowbase, *arrowdelta, node.r/2, color="r")
 
@@ -42,18 +44,16 @@ def binding_line(node1, node2):
     return np.array([linePoint1, linePoint2])
 
 
-def plotShape(shape, ax):
+def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
     # Plots shape on axis
     # Plot all of the nodes:
     N = len(shape.nodes)
 
     for node in shape.nodes:
-        nodeArtist = make_artist(node)
+        nodeArtist = makeArtist(node, pos, rot)
         for artist in nodeArtist:
             ax.add_artist(artist)
 
-    for line in shape.lines:
-        ax.plot(line[:,0], line[:,1])
-
-
-
+    lines = np.array([[np.matmul(rotMat(rot), point) + pos for point in line] for line in shape.lines])
+    for line in lines:
+        ax.plot(line[:, 0], line[:, 1])
