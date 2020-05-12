@@ -2,43 +2,84 @@ from PlotShape import binding_line
 from PlotShape import plotShape
 from Shape import Node
 from Shape import Shape
+from ShapeValidTest import isInBounds
+from PlotShape import makeArtist
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def make_artist(node):
-    circle = plt.Circle(node.pos, node.r)
-    arrowbase = node.pos + node.r * np.array([0.5 * node.o, 0.5])
-    arrowdelta = node.r * np.array([-node.o, 0])
-    arrow = plt.Arrow(*arrowbase, *arrowdelta, node.r/2, color="r")
-
-    return [circle, arrow]
 
 
 def testShapePlotting():
-    nodes = [Node([0,0],1,1,0)]
-    nodes.append(Node([5,1],1,-1,1))
-    nodes.append(Node([4,-6],1,1,2))
-    nodes.append(Node([7,3],1,1,3))
+    nodes = [Node([0, 0], 1, 1, 0)]
+    nodes.append(Node([5, 1], 1, -1, 1))
+    nodes.append(Node([4, -6], 1, 1, 2))
+    nodes.append(Node([7, 3], 1, 1, 3))
     s = Shape(nodes)
 
     fig, ax = plt.subplots()
     ax.set_ylim(-10, 10)
     ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-5, -5], 0)
 
-    plotShape(s, ax)
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-5, -5], 0.5)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-5, -5], 1.0)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-5, -5], 1.5)
+
     plt.show()
+
+
+def testShapeOrientation():
+    nodes = [Node([0, 0], 1, 1, 0)]
+    nodes.append(Node([5, 1], 1, -1, 1))
+    nodes.append(Node([4, -6], 1, 1, 2))
+    nodes.append(Node([7, 3], 1, 1, 3))
+    s1 = Shape(nodes)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+
+    plotShape(s1, ax)
+    ax.set_title(f"Shape orientation is {s1.o}")
+
+    nodes2 = [Node([0, 0], 1, -1, 0)]
+    nodes2.append(Node([7, 3], 1, -1, 3))
+    nodes2.append(Node([4, -6], 1, -1, 2))
+    nodes2.append(Node([5, 1], 1, 1, 1))
+    s2 = Shape(nodes2)
+
+    fig2, ax2 = plt.subplots()
+    ax2.set_ylim(-10, 10)
+    ax2.set_xlim(-10, 10)
+
+    plotShape(s2, ax2)
+    ax2.set_title(f"Shape orientation is {s2.o}")
+
+    plt.show()
+
 
 def testAreaFunction():
     #nodes = [Node([-6,0],1,-1,0)]
-    #nodes.append(Node([0,-3],6,-1,1))
-    #nodes.append(Node([6,0],1,-1,2))
-    #nodes.append(Node([0,-3],1,-1,3))
-    nodes = [Node([-5,5],1,-1,0)]
-    nodes.append(Node([0,10],5,1,4))
-    nodes.append(Node([5,5],1,-1,1))
-    nodes.append(Node([5,-5],1,-1,2))
-    nodes.append(Node([-5,-5],1,-1,3))
+    # nodes.append(Node([0,-3],6,-1,1))
+    # nodes.append(Node([6,0],1,-1,2))
+    # nodes.append(Node([0,-3],1,-1,3))
+    nodes = [Node([-5, 5], 1, -1, 0)]
+    nodes.append(Node([0, 10], 5, 1, 4))
+    nodes.append(Node([5, 5], 1, -1, 1))
+    nodes.append(Node([5, -5], 1, -1, 2))
+    nodes.append(Node([-5, -5], 1, -1, 3))
     s = Shape(nodes)
 
     print(f"The area of the shape is: {s.area}")
@@ -50,7 +91,6 @@ def testAreaFunction():
     plotShape(s, ax)
     plt.show()
 
-testAreaFunction()
 
 def testNodesAndBindingLine():
     node1 = Node([5, 5], 1, 1, 1)
@@ -68,14 +108,14 @@ def testNodesAndBindingLine():
     line4 = binding_line(node7, node8)
 
     patches = []
-    patches.extend(make_artist(node1))
-    patches.extend(make_artist(node2))
-    patches.extend(make_artist(node3))
-    patches.extend(make_artist(node4))
-    patches.extend(make_artist(node5))
-    patches.extend(make_artist(node6))
-    patches.extend(make_artist(node7))
-    patches.extend(make_artist(node8))
+    patches.extend(makeArtist(node1))
+    patches.extend(makeArtist(node2))
+    patches.extend(makeArtist(node3))
+    patches.extend(makeArtist(node4))
+    patches.extend(makeArtist(node5))
+    patches.extend(makeArtist(node6))
+    patches.extend(makeArtist(node7))
+    patches.extend(makeArtist(node8))
 
     fig, ax = plt.subplots()
     ax.set_ylim(-10, 10)
@@ -91,3 +131,29 @@ def testNodesAndBindingLine():
     ax.plot(line4[:, 0], line4[:, 1])
 
     plt.show()
+
+
+def testInBounds():
+    nodes = [Node([0, 0], 0.1, -1, 1)]
+    nodes.append(Node([0.7, 0], 0.1, -1, 2))
+    nodes.append(Node([0.7, -0.3], 0.1, -1, 3))
+    nodes.append(Node([0.8, -0.8], 0.3, 1, 4))
+    nodes.append(Node([0.7, -1.3], 0.1, -1, 5))
+    nodes.append(Node([0, -1.3], 0.1, -1, 6))
+    s = Shape(nodes)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-2, 2)
+    ax.set_xlim(-2, 2)
+    ax.plot([0.5, 0.5, 2], [-2, -0.5, -0.5], 'k')
+    ax.plot([-0.5, -0.5, 2], [-2, 0.5, 0.5], 'k')
+
+    pos = np.array([0.1, 0.4])
+    rot = -0.3
+    plotShape(s, ax, pos, rot)
+    ax.set_title(f"Shape is in bounds: {isInBounds(s, pos, rot)}")
+    # TODO make touching lines not intersect according to the function
+    plt.show()
+
+
+testInBounds()
