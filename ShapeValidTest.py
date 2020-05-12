@@ -1,5 +1,6 @@
 from Shape import Shape
 from LineMath import linesIntersect
+from LineMath import segmentIntersectsArc
 import numpy as np
 
 def rotMat(theta):
@@ -25,6 +26,8 @@ def isThrough(shape, pos, rot):
 
 def isInBounds(shape, pos, rot):
     # Returns True if no part of shape is outside of corridor
+    # Facts used: There is no need to check if lines cross the outer border, 
+    # if they did, that necessarily means a node is outside the outer border 
     for node in shape.nodes:
         # Calculate the position of the node
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
@@ -33,7 +36,7 @@ def isInBounds(shape, pos, rot):
             # If node is outside outer bounds
             if nodePos[1] + node.r > 0.5 or nodePos[0] - node.r < -0.5:
                 return False
-            # If the corner (0,0) is inside node
+            # If the inner corner (0.5,-0.5) is inside node
             cornerPos = np.array([0.5, -0.5])
             if np.linalg.norm(nodePos-cornerPos) < node.r:
                 return False
@@ -44,11 +47,12 @@ def isInBounds(shape, pos, rot):
             if nodePos[0] > 0.5 and nodePos[1] - node.r < -0.5:
                 return False
         # If node is outside the shape
+        # An outside node can never be causing trouble at the outer wall
         else:
             # If arc of node intersects lower inner line, 
             # TODO No need to check upper inner line?
             innerLine = np.array([[0.5, -0.5], [0.5, -100]])
-            if segmentIntersectsArc(innerLine, nodePos, node.r, shape.nodeAngles[node.ID]):
+            if segmentIntersectsArc(innerLine, nodePos, node.r, shape.nodeAngles[node.ID] + rot, node.o):
                 return False
 
     # No nodes are bad if you got here
@@ -56,13 +60,12 @@ def isInBounds(shape, pos, rot):
     innerLine = np.array([[0.5, -100], [0.5, -0.5]])
     for line in shape.lines:
         # Shift line
-        line = np.array([np.matmul(rm, point) + pos for point in line])
+        line = np.array([np.matmul(rotMat(rot), point) + pos for point in line])
         # Check if line crosses the inner line
         if linesIntersect(line, innerLine):
             return False
 
     # All tests passed, the shape is in bounds
-    # TODO NOPE HAHA CAUSE THERE ARE NODES OUTSIDE THE SHAPE THAT WILL TRIGGER FALSE ALARMS
     return True
 
 
@@ -86,7 +89,4 @@ def shapeIsValid(shape):
     position = -0.5 - maximumY
     rotation = 0
 
-    while True:
-
-
-
+    #while True:
