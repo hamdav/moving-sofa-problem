@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from LineMath import rotMat
+from ShapeValidTest import isInBounds
 
 
 def makeArtist(node, pos=np.array([0, 0]), rot=0):
@@ -60,3 +61,18 @@ def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
                        pos for point in line] for line in shape.lines])
     for line in lines:
         ax.plot(line[:, 0], line[:, 1])
+
+def tmpShowShape(shape, pos=np.array([0, 0]), rot=0):
+    # Shows fig of shape
+
+    fig, ax = plt.subplots()
+
+    plotShape(shape, ax, pos, rot)
+    ax.set_ylim(-2, 2)
+    ax.set_xlim(-2, 2)
+    ax.plot([0.5, 0.5, 2], [-2, -0.5, -0.5], 'k')
+    ax.plot([-0.5, -0.5, 2], [-2, 0.5, 0.5], 'k')
+    ax.set_title(f"inBounds: {isInBounds(shape, pos, rot)}")
+
+    plt.show()
+
