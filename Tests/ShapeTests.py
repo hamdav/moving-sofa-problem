@@ -37,6 +37,16 @@ def testShapePlotting():
     ax.set_xlim(-10, 10)
     plotShape(s, ax, [-5, -5], 1.5)
 
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-4, -4], 1.5)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(-10, 10)
+    ax.set_xlim(-10, 10)
+    plotShape(s, ax, [-3, -3], 1.5)
+
     plt.show()
 
 
