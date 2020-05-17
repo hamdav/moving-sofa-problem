@@ -48,14 +48,15 @@ def binding_line(node1, node2):
 
 def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
     # Plots shape on axis
-    # Plot all of the nodes:
-    N = len(shape.nodes)
 
+    # Plot all of the nodes:
     for node in shape.nodes:
         nodeArtist = makeArtist(node, pos, rot)
         for artist in nodeArtist:
             ax.add_artist(artist)
 
-    lines = np.array([[np.matmul(rotMat(rot), point) + pos for point in line] for line in shape.lines])
+    # Plot the lines
+    lines = np.array([[np.matmul(rotMat(rot), point) +
+                       pos for point in line] for line in shape.lines])
     for line in lines:
         ax.plot(line[:, 0], line[:, 1])

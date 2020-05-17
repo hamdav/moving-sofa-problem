@@ -3,12 +3,14 @@ from LineMath import linesIntersect
 from LineMath import segmentIntersectsArc
 import numpy as np
 
+
 def rotMat(theta):
     # Returns a rotation matrix that rotates vectors around (0,0)
     s = np.sin(theta)
     c = np.cos(theta)
     return np.array([[c, -s],
                      [s, c]])
+
 
 def isThrough(shape, pos, rot):
     # Returns True if the shape transposed by pos and rotated
@@ -17,7 +19,7 @@ def isThrough(shape, pos, rot):
         # if node is outside shape, continue
         if not node.o == shape.o:
             continue
-        if (np.matmul(rotMat(rot), node.pos)  + pos)[1] - node.r < -0.5:
+        if (np.matmul(rotMat(rot), node.pos) + pos)[1] - node.r < -0.5:
             return False
 
     # No node (after trasposition and rotation) was below -0.5
@@ -26,8 +28,8 @@ def isThrough(shape, pos, rot):
 
 def isInBounds(shape, pos, rot):
     # Returns True if no part of shape is outside of corridor
-    # Facts used: There is no need to check if lines cross the outer border, 
-    # if they did, that necessarily means a node is outside the outer border 
+    # Facts used: There is no need to check if lines cross the outer border,
+    # if they did, that necessarily means a node is outside the outer border
     for node in shape.nodes:
         # Calculate the position of the node
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
@@ -49,7 +51,7 @@ def isInBounds(shape, pos, rot):
         # If node is outside the shape
         # An outside node can never be causing trouble at the outer wall
         else:
-            # If arc of node intersects lower inner line, 
+            # If arc of node intersects lower inner line,
             # TODO No need to check upper inner line?
             innerLine = np.array([[0.5, -0.5], [0.5, -100]])
             if segmentIntersectsArc(innerLine, nodePos, node.r, shape.nodeAngles[node.ID] + rot, node.o):
@@ -60,7 +62,8 @@ def isInBounds(shape, pos, rot):
     innerLine = np.array([[0.5, -100], [0.5, -0.5]])
     for line in shape.lines:
         # Shift line
-        line = np.array([np.matmul(rotMat(rot), point) + pos for point in line])
+        line = np.array(
+            [np.matmul(rotMat(rot), point) + pos for point in line])
         # Check if line crosses the inner line
         if linesIntersect(line, innerLine):
             return False
