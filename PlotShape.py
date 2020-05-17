@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 import numpy as np
 from LineMath import rotMat
 from ShapeValidTest import isInBounds
@@ -76,3 +78,25 @@ def tmpShowShape(shape, pos=np.array([0, 0]), rot=0):
 
     plt.show()
 
+def animateWalk(shape, poss, rots):
+    # Saves an animation of the walk specified by poss and rots
+
+    # Create figure and axis
+    fig, ax = plt.subplots()
+
+    def animate(i):
+        ax.clear()
+        plotShape(shape, ax, poss[i], rots[i])
+        ax.set_ylim(-2, 2)
+        ax.set_xlim(-2, 2)
+        ax.plot([0.5, 0.5, 2], [-2, -0.5, -0.5], 'k')
+        ax.plot([-0.5, -0.5, 2], [-2, 0.5, 0.5], 'k')
+        ax.set_title(f"i: {i}, inBounds: {isInBounds(shape, poss[i], rots[i])}")
+
+    anim = FuncAnimation(fig, animate, init_func=None, frames=len(
+        poss), interval=10, blit=False, repeat=True, repeat_delay=0)
+    # Set up formatting for the movie files
+    Writer = animation.writers['imagemagick']
+    writer = Writer(fps=15, bitrate=1800)
+
+    anim.save('walk.gif', writer=writer)

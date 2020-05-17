@@ -1,13 +1,14 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
 from PlotShape import binding_line
 from PlotShape import plotShape
 from Shape import Node
 from Shape import Shape
 from ShapeValidTest import isInBounds
 from PlotShape import makeArtist
-import matplotlib.pyplot as plt
-import numpy as np
-
-
+from PlotShape import animateWalk
+from ShapeValidTest import shapeIsValid
 
 
 def testShapePlotting():
@@ -165,5 +166,17 @@ def testInBounds():
     # TODO make touching lines not intersect according to the function
     plt.show()
 
+def testWalkAnimation():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.3, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.3, -0.5], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.5], 0.1, 1, 3))
+    s = Shape(nodes)
 
-testInBounds()
+    ys = np.linspace(0,1,1000)
+    xs = np.zeros(1000)
+    poss = np.column_stack((xs, ys))
+    rots = np.linspace(0, 0.5, 1000)
+
+    animateWalk(s, poss, rots)
+
