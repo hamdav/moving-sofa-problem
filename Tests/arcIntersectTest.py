@@ -15,21 +15,36 @@ def arc(center, radius, angle1, angle2):
     ys = center[1] + np.sin(angles) * radius
     return (xs, ys)
 
-
+print(" - - - Simple tests - - - ")
 line1 = np.array([[-1, 1], [1, 1]])
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.14])}")
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.16])}")
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [6, 3.14])}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.14], 1)}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.16], 1)}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [6, 3.14], 1)}")
 line1 = np.array([[-1, 0.9], [1, 1.1]])
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.14])}")
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.16])}")
-print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [6, 3.14])}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.14], 1)}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [0, 3.16], 1)}")
+print(f"should be false, is {segmentIntersectsArc(line1, np.array([0,0]), 0.95, [6, 3.14], 1)}")
 line1 = np.array([[0,0],[0,1]])
-print(f"should be true, is {segmentIntersectsArc(line1, np.array([0,0]), 0.9, [0, 3.14])}")
+print(f"should be true, is {segmentIntersectsArc(line1, np.array([0,0]), 0.9, [0, 3.14], 1)}")
 line1 = np.array([[0,0],[1,0]])
-print(f"should be true, is {segmentIntersectsArc(line1, np.array([0,0]), 0.9, [6, 1])}")
+print(f"should be true, is {segmentIntersectsArc(line1, np.array([0,0]), 0.9, [6, 1], 1)}")
 line1 = np.array([[0,0],[1,-1]])
-print(f"should be true, is {segmentIntersectsArc(line1, np.array([1,0]), 0.9, [1, 6])}")
+print(f"should be true, is {segmentIntersectsArc(line1, np.array([1,0]), 0.9, [1, 6], 1)}")
+print(" - - - Edge cases - - - ")
+line = np.array([[0,0],[1,0]])
+print(f"Line endpoint touches arc endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [0, 1], 1)}")
+print(f"Line endpoint touches arc endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [6, 0], 1)}")
+line = np.array([[1,-1],[1,1]])
+print(f"Line kisses arc, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [6, 1], 1)}")
+print(f"Line kisses arc, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [1, 6], -1)}")
+line = np.array([[0,0],[2,0]])
+print(f"Line intersects arc endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [0, 1], 1)}")
+print(f"Line intersects arc endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [6, 0], -1)}")
+line = np.array([[0,0],[1,0]])
+print(f"Arc intersects line endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [6, 1], 1)}")
+line = np.array([[1,0],[2,0]])
+print(f"Arc intersects line endpoint, do they intersect? {segmentIntersectsArc(line, np.array([0,0]), 1, [6, 1], 1)}")
+
 
 
 fig = plt.figure(1)
@@ -49,7 +64,7 @@ while True:
     arcPoints = arc(points[2], radius, angle1, angle2)
 
     col = "r" if segmentIntersectsArc(
-        line1, points[2], radius, [angle1, angle2]) else "k"
+        line1, points[2], radius, [angle1, angle2], 1) else "k"
     ax.plot(line1[:, 0], line1[:, 1], col)
     ax.plot(arcPoints[0], arcPoints[1], col)
 

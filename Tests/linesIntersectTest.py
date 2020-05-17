@@ -2,26 +2,28 @@ from LineMath import linesIntersect
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+print(" - - - Simple tests - - -")
 line1 = np.array([[0,0],[0,1]])
 line2 = np.array([[-1,0.5],[1,0.5]])
-print(f"Should be true; is: {linesIntersect(line1, line2)}")
-
-line1 = np.array([[0,0],[0,1]])
-line2 = np.array([[0,1],[1,1]])
 print(f"Should be true; is: {linesIntersect(line1, line2)}")
 
 line1 = np.array([[0,0],[0,1]])
 line2 = np.array([[2,1],[3,1]])
 print(f"Should be false; is: {linesIntersect(line1, line2)}")
 
-line1 = np.array([[0,0],[0,1]])
-line2 = np.array([[1,1],[-1,1]])
-print(f"Should be true; is: {linesIntersect(line1, line2)}")
-
 line1 = np.array([[0,0],[1,1]])
 line2 = np.array([[0,1],[1,0]])
 print(f"Should be true; is: {linesIntersect(line1, line2)}")
 
+print(" - - - Edge cases - - -")
+line1 = np.array([[0,0],[0,1]])
+line2 = np.array([[0,1],[1,1]])
+print(f"Line endpoint touches line endpoint, is: {linesIntersect(line1, line2)}")
+
+line1 = np.array([[0,0],[0,1]])
+line2 = np.array([[1,1],[-1,1]])
+print(f"Line endpoint touches line middle, is: {linesIntersect(line1, line2)}")
 
 fig = plt.figure(1)
 ax = fig.add_subplot()

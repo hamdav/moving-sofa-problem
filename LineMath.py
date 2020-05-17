@@ -18,8 +18,9 @@ def boxesIntersect(line1, line2):
 def segmentIntersectsArc(line, center, radius, angles, orientation):
     # Returns true if line intersects the arc defined by center,
     # radius, angles =[start, end] and orientation: +1 or -1
-    # Touching at endpoint is not intersecting, e.g. a line ending at a
-    # point on the circle arc beginning will not be considered intersecting
+    # Touching should not be considered intersecting
+    # If a line kisses the circle, it isn't instersecting it
+    # Touching endpoints is also okay, but only if it's both line and arc endpoint
 
     # If orientation is -1, switch angleIn and angleOut
     if orientation == -1:
@@ -38,7 +39,7 @@ def segmentIntersectsArc(line, center, radius, angles, orientation):
 
     # If the line does not intersect the circle, it definitely doesn't
     # intersect the arc
-    if abs(lineY) > radius:
+    if abs(lineY) >= radius:
         return False
 
     # The line intersects the circle at x values positive and negative xIntersection.
@@ -46,6 +47,7 @@ def segmentIntersectsArc(line, center, radius, angles, orientation):
 
     candidates = []
     # Decide where the segment intersects the circle
+    # Don't include line endpoints
     if (min(line[0][0], line[1][0]) < xIntersection and
             max(line[0][0], line[1][0]) > xIntersection):
         candidates.append(xIntersection)
@@ -53,19 +55,18 @@ def segmentIntersectsArc(line, center, radius, angles, orientation):
             max(line[0][0], line[1][0]) > -xIntersection):
         candidates.append(-xIntersection)
 
-    if not candidates:
-        return False
-
+    # Check if any of the candidate xs is in the arc
+    # Include endpoints
     for x in candidates:
         phi = np.arctan2(lineY, x) % (2 * np.pi)
         if angleBegin < angleEnd:
             # Arc does not go across 0
-            if angleBegin < phi and phi < angleEnd:
+            if angleBegin <= phi and phi <= angleEnd:
                 return True
         else:
             # Arc does go across 0 angle, making begin and end angles opposite
             # Theta is in arc if it is greater than begin or less than end
-            if phi > angleBegin or phi < angleEnd:
+            if phi >= angleBegin or phi <= angleEnd:
                 return True
 
     return False
@@ -84,7 +85,7 @@ def linesIntersect(line1, line2):
     # p11 is the first point on line1 and so on.
     # All arguments should be numpy arrays.
 
-    # Does the function inlude endpoints? I think so
+    # Does NOT include endpoints
 
     vector1121 = line1[0] - line2[0]
     vector1122 = line1[0] - line2[1]
@@ -99,4 +100,4 @@ def linesIntersect(line1, line2):
         #print("One of the vectors are zero, returning False")
         return False
 
-    return (np.dot(vector1121, normalLine1) * np.dot(vector1122, normalLine1) <= 0 and np.dot(vector2111, normalLine2) * np.dot(vector2112, normalLine2) <= 0)
+    return (np.dot(vector1121, normalLine1) * np.dot(vector1122, normalLine1) < 0 and np.dot(vector2111, normalLine2) * np.dot(vector2112, normalLine2) < 0)
