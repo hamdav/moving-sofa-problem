@@ -77,19 +77,69 @@ def shapeIsValid(shape):
     # width 1 and a 90 degree turn to the right
     # The corridor is initially centered on 0
 
+    # Parameters for random walk
+    maxRot = 0.01
+    maxMove = 0.01
+    maxSteps = 10000
+
     # Check if shape is within constraints to begin with
     # For each node, check that the edge of the node is within x=-0.5 and x=0.5
     # Also note where the top of the shape is
     maximumY = 0
     for node in shape.nodes:
         if node.pos[0] + node.r > 0.5 or node.pos[0] - node.r < -0.5:
-            return False
+            return (False, [], [])
 
-        if node.pos[1] > maximumY:
-            maximumY = node.pos[1]
+        if node.pos[1] + node.r > maximumY:
+            maximumY = node.pos[1] + node.r
 
-    # Place shape so that no part of it is beyond the beginning of the turn
-    position = -0.5 - maximumY
-    rotation = 0
+    # Place shape so that no part of it is beyond the beginning line
+    pos = np.array([0, -0.5 - maximumY])
+    rot = 0
 
-    #while True:
+    poss = [pos.copy()]
+    rots = [rot]
+
+    # Number of steps in the walk
+    steps = 0
+    n = 0
+    while True:
+        n += 1
+        print(n, " - ", steps)
+        # Move in a random direction with a random rotation
+        # Only mutate direction with prob 0.5
+        if np.random.random_sample() < 0.5:
+            dx = (np.random.random_sample() - 0.5) * 2 * maxMove
+        else:
+            dx = 0
+        if np.random.random_sample() < 0.5:
+            dy = (np.random.random_sample() - 0.5) * 2 * maxMove
+        else:
+            dy = 0
+        if np.random.random_sample() < 0.5:
+            dr = (np.random.random_sample() - 0.5) * 2 * maxRot
+        else:
+            dr = 0
+
+        deltaPos = np.array([dx, dy])
+        deltaRot = dr
+        # If entire shape is below y=-0.5, don't go down
+        if pos[1] + maximumY < -0.5:
+            deltaPos[1] = max(0, deltaPos[1])
+
+        # If the rotation/translation keeps the shape in bounds, do it.
+        if isInBounds(shape, pos + deltaPos, rot + deltaRot):
+            pos += deltaPos
+            rot += deltaRot
+            poss.append(pos.copy())
+            rots.append(rot)
+            # Increment steps
+            steps += 1
+
+        # If the shape is through, declare that it is possible.
+        if isThrough(shape, pos, rot):
+            return (True, poss, rots)
+
+        # If we've been at this for too long, declare that it isn't possible
+        if steps > maxSteps:
+            return (False, [], [])

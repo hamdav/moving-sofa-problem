@@ -180,3 +180,28 @@ def testWalkAnimation():
 
     animateWalk(s, poss, rots)
 
+def testShapeIsValidWalk():
+    nodes = [Node([0.4, -0.205], 0.1, 1, 0)]
+    nodes.append(Node([-0.4, -0.205], 0.1, 1, 1))
+    nodes.append(Node([-0.4, -0.8], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.8], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    isValid, poss, rots = shapeIsValid(s)
+
+    #breakpoint()
+
+    print("lenght of poss: ", len(poss))
+    if len(poss) > 100:
+        shortPoss = poss[::int(len(poss)/100) +1]
+        shortRots = rots[::int(len(poss)/100) +1]
+        print("shortened by ", int(len(poss)/100) +1)
+
+    animateWalk(s, shortPoss, shortRots)
+
+    #plt.show()
+
+
+testShapeIsValidWalk()
+#testShapePlotting()
+
