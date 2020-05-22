@@ -108,6 +108,35 @@ def nodesOutOfBounds(shape, pos, rot):
     return rvList
 
 
+def posRotToShiftTwoNodes(nodePos1, nodePos2, delta1, delta2):
+    # Takes two nodes' (original) positions and where to move them
+    # Returns deltaPos and deltaRot that will acomplish this
+
+    # Calculate rotation
+    vector12 = nodePos2 - nodePos1
+    origAngle = np.arctan2(vector12[1], vector12[0])
+    newVector12 = nodePos2 + delta2 - (nodePos1 + delta1)
+    newAngle = np.arctan2(newVector12[1], newVector12[0])
+    deltaRot = newAngle - origAngle
+
+    # Calculate translation
+    vectorOldNew1 = np.matmul(rotMat(deltaRot),
+                              nodePos2 + delta2 - (nodePos1 + delta1))
+    deltaPos = vectorOldNew1
+
+    return (deltaPos, deltaRot)
+
+
+def posRotToRotateAroundPoint(nodePos, theta):
+    # Takes (original) position around which we wish to rotate
+    # And theta, the (signed) angle we wish to rotate with
+    # Returns the pos and rot that accomplishes this
+    deltaRot = theta
+    newNodePos = np.matmul(rotMat(theta), nodePos)
+    deltaPos = nodePos - newNodePos
+    return (deltaPos, deltaRot)
+
+
 def shapeIsValid(shape):
     # Returns true if shape can be moved through a corridor with
     # width 1 and a 90 degree turn to the right
