@@ -144,17 +144,93 @@ def shapeIsValid(shape):
 
     # Check if shape is within constraints to begin with
     # For each node, check that the edge of the node is within x=-0.5 and x=0.5
-    # Also note where the top of the shape is
-    maximumY = 0
     for node in shape.nodes:
+        # If node isn't inside node
+        if node.o != shape.o:
+            continue
         if node.pos[0] + node.r > 0.5 or node.pos[0] - node.r < -0.5:
             return False
 
-        if node.pos[1] > maximumY:
-            maximumY = node.pos[1]
+    topNode = shape.getNodeById(getTopNodeId(shape))
+    maximumY = topNode.pos[1] + topNode.r
 
     # Place shape so that no part of it is beyond the beginning of the turn
-    position = -0.5 - maximumY
-    rotation = 0
+    pos = [0, -0.5 - maximumY]
+    rot = 0
 
-    #while True:
+    # Move shape up until an (inside) node hits the far wall
+    pos = [0, 0.5 - maximumY]
+    rot = 0
+
+    while True:
+        deltaPosRot = posRotToShiftRightWithRot(shape, pos, rot)
+
+        if deltaPosRot is None:
+            return False
+        else:
+            pos += deltaPosRot[0]
+            rot += deltaPosRot[1]
+
+        if isThrough(shape, pos, rot):
+            return True
+
+def posRotToShiftRightWithRot(shape, pos, rot):
+    # Returns the deltapos and deltarot required to shift shape
+    # right by stepRight
+    # If it isn't possible, returns None.
+
+    stepRight = 0.01
+    stepRot = 0.01
+
+    # Move shape right
+    newPos = pos + np.array([stepRight, 0])
+    newRot = rot
+
+    # Get the top node
+    topNodeID = getTopNodeId(shape, newPos, rot)
+
+    # While shape is not in bounds, rotate cw until it is 
+    # or something new goes out of bounds
+    while not isInBounds(shape, newPos, newRot):
+        deltaPos, deltaRot = posRotToRotateAroundPoint(
+            shape.getNodeById(topNodeID).pos, stepRot)
+
+        # Check all of the out of bounds (inside) nodes
+        for nodeWithQuadrant in nodesOutOfBounds(shape, newPos + deltaPos,
+                                                 newRot + deltaRot):
+            # If anyone went out to quadrant I, rotate around that one
+            # instead next pass
+            if nodeWithQuadrant[1] == 1:
+                topNodeID = nodeWithQuadrant[0]
+                break
+
+            # If anyone is out in quadrant III, the game is lost
+            # because then we can't rotate so that the shape clears
+            # the corner and the leftest wall
+            if nodeWithQuadrant[1] == 3:
+                return None
+        else:     # If for loop not broken
+            newPos += deltaPos
+            newRot += deltaRot
+
+    return (newPos - pos, newRot - rot)
+
+
+def getTopNodeId(shape, pos=np.array([0, 0]), rot=0):
+    # Returns the id of the (inside) node that reaches the
+    # highest y-value
+
+    maximumY = None
+    topNodeID = None
+    for node in shape.nodes:
+        # If node isn't inside node
+        if node.o != shape.o:
+            continue
+
+        nodePos = np.matmul(rotMat(rot), node.pos) + pos
+
+        if maximumY is None or nodePos[1] + node.r > maximumY:
+            maximumY = nodePos[1] + node.r
+            topNodeID = node.ID
+
+    return topNodeID
