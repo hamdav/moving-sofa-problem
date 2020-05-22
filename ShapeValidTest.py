@@ -72,6 +72,42 @@ def isInBounds(shape, pos, rot):
     return True
 
 
+def nodesOutOfBounds(shape, pos, rot):
+    # Return node ids of (inside) nodes out of bounds
+    # Also which quadrant they are out of bounds in
+
+    #   II  :   I
+    # .......:________
+    #       |   0
+    #   III |   ._____
+    #       |   |
+    #       |   | IV
+
+    rvList = []
+
+    for node in shape.nodes:
+        # If node is not an inside node, continue
+        if node.o != shape.o:
+            continue
+
+        nodePos = np.matmul(rotMat(rot), node.pos) + pos
+
+        if nodePos[1] + node.r > 0.5:
+            rvList.append([node.ID, 1])
+        if nodePos[0] - node.r < -0.5:
+            rvList.append([node.ID, 3])
+        if nodePos[0] - node.r < -0.5 and nodePos[1] + node.r > 0.5:
+            rvList.append([node.ID, 2])
+        if nodePos[0] + node.r > 0.5 and nodePos[1] <= -0.5:
+            rvList.append([node.ID, 4])
+        elif nodePos[1] - node.r < -0.5 and nodePos[0] >= 0.5:
+            rvList.append([node.ID, 4])
+        elif np.linalg.norm(nodePos - np.array([0.5, -0.5])) < node.r:
+            rvList.append([node.ID, 4])
+
+    return rvList
+
+
 def shapeIsValid(shape):
     # Returns true if shape can be moved through a corridor with
     # width 1 and a 90 degree turn to the right
