@@ -178,3 +178,11 @@ class Shape:
 
         # Add the circleSectorAreas
         self.area = area + circleSectorAreas
+
+    def getNodeById(self, ID):
+        # Returns node with id: ID if there is one, else return None
+        for node in self.nodes:
+            if node.ID == ID:
+                return node
+
+        return None
