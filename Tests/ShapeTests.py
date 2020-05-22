@@ -166,6 +166,7 @@ def testInBounds():
     # TODO make touching lines not intersect according to the function
     plt.show()
 
+
 def testWalkAnimation():
     nodes = [Node([0.4, 0], 0.1, 1, 0)]
     nodes.append(Node([-0.3, 0], 0.1, 1, 1))
@@ -173,7 +174,7 @@ def testWalkAnimation():
     nodes.append(Node([0.4, -0.5], 0.1, 1, 3))
     s = Shape(nodes)
 
-    ys = np.linspace(0,1,1000)
+    ys = np.linspace(0, 1, 1000)
     xs = np.zeros(1000)
     poss = np.column_stack((xs, ys))
     rots = np.linspace(0, 0.5, 1000)

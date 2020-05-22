@@ -20,7 +20,8 @@ class Shape:
     # self.nodes: list of node objects
 
     # self.nodeAngles: dictionare with node.ID as keys and
-    # np.array([angleIn, angleOut]) as values. The angles are the angles at which
+    # np.array([angleIn, angleOut]) as values.
+    # The angles are the angles at which
     # the incomming and outgoing lines touch the node,
     # counted positively and from the x axis.
     # Angles are always between 0 and 2 pi.
@@ -135,7 +136,8 @@ class Shape:
 
     def calculateArea(self):
         # Calculates the area of the shape
-        # step one: calculate the area of the shape created by the binding lines and the centers of the nodes
+        # step one: calculate the area of the shape created by
+        # the binding lines and the centers of the nodes
         # Then, add the circle sectors from the circles inside the shape
         # and subtract the circle sectors on the outside.
 
