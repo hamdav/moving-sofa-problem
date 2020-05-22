@@ -3,6 +3,7 @@ import numpy as np
 
 from PlotShape import binding_line
 from PlotShape import plotShape
+from PlotShape import tmpShowShape
 from Shape import Node
 from Shape import Shape
 from ShapeValidTest import isInBounds
@@ -181,3 +182,17 @@ def testWalkAnimation():
 
     animateWalk(s, poss, rots)
 
+
+def testShapeIsValid():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -0.9], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    tmpShowShape(s)
+
+    print(shapeIsValid(s))
+
+
+testShapeIsValid()
