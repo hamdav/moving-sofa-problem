@@ -142,7 +142,7 @@ def posRotToShiftTwoNodes(nodePos1, nodePos2, delta1, delta2):
     return (deltaPos, deltaRot)
 
 
-def posRotToRotateAroundPoint(nodePos, theta):
+def posRotToRotateAroundNode(shape, currentRot, theta, nodeID):
     """
     Takes (original) position around which we wish to rotate
     And theta, the (signed) angle we wish to rotate with
@@ -150,8 +150,10 @@ def posRotToRotateAroundPoint(nodePos, theta):
     """
 
     deltaRot = theta
-    newNodePos = np.matmul(rotMat(theta), nodePos)
-    deltaPos = nodePos - newNodePos
+    origNodePos = np.matmul(rotMat(currentRot), shape.getNodeById(nodeID).pos)
+    newNodePos = np.matmul(rotMat(currentRot + theta),
+                           shape.getNodeById(nodeID).pos)
+    deltaPos = origNodePos - newNodePos
     return (deltaPos, deltaRot)
 
 
@@ -213,8 +215,8 @@ def posRotToShiftRightWithRot(shape, pos, rot):
     # While shape is not in bounds, rotate cw until it is
     # or something new goes out of bounds
     while not isInBounds(shape, newPos, newRot):
-        deltaPos, deltaRot = posRotToRotateAroundPoint(
-            shape.getNodeById(topNodeID).pos, stepRot)
+        deltaPos, deltaRot = posRotToRotateAroundNode(
+            shape, rot, stepRot, topNodeID)
 
         # Check all of the out of bounds (inside) nodes
         for nodeWithQuadrant in nodesOutOfBounds(shape, newPos + deltaPos,
