@@ -189,6 +189,56 @@ def shapeIsValid(shape):
         if isThrough(shape, pos, rot):
             return True
 
+
+def getWalk(shape):
+    """
+    Returns a sequence of positions and rotations that will get
+    the shape through a corrodor with
+    width 1 and a 90 degree turn to the right
+    The corridor is centered on 0
+    """
+
+    topNode = shape.getNodeById(getTopNodeId(shape))
+    maximumY = topNode.pos[1] + topNode.r
+    rightNode = shape.getNodeById(getRightNodeId(shape))
+    minimumX = rightNode.pos[0] - topNode.r
+
+    # Place shape as far left as possible and below the starting line
+    pos = [-0.5 - minimumX, -0.5 - maximumY]
+    rot = 0
+
+    # Initialize arrays to hold positions and rotations
+    poss = [pos.copy()]
+    rots = [rot]
+
+    # Check that it is in bounds to begin with
+    if not isInBounds(shape, pos, rot):
+        return (poss, rots)
+
+    # Move up
+    for y in np.linspace(-0.5 - maximumY, 0.5 - maximumY, 10):
+        poss.append([pos[0], y])
+        rots.append(0)
+
+    # Place shape as far up and as far left as possible
+    pos = [-0.5 - minimumX, 0.5 - maximumY]
+
+    while True:
+        deltaPosRot = posRotToShiftRightWithRot(shape, pos, rot)
+        # print(deltaPosRot)
+
+        if deltaPosRot is None:
+            return (poss, rots)
+        else:
+            pos += deltaPosRot[0]
+            rot += deltaPosRot[1]
+            poss.append(pos.copy())
+            rots.append(rot)
+
+        if isThrough(shape, pos, rot):
+            return (poss, rots)
+
+
 def posRotToShiftRightWithRot(shape, pos, rot):
     """
     Returns the deltapos and deltarot required to shift shape
