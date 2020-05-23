@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from time import time
 
 from PlotShape import binding_line
 from PlotShape import plotShape
@@ -227,5 +228,34 @@ def testGetWalk():
     animateWalk(s, poss, rots)
 
 
+def timeRecalculate():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -0.9], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    start = time()
+    for i in range(1000):
+        s.recalculate()
+    end = time()
+    print(f"Time taken: {end-start:.2f} seconds")
+
+
+def testGetOffspring():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -0.9], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    tmpShowShape(s)
+    for i in range(10):
+        s = s.getOffspring()
+        tmpShowShape(s)
+
+
+
+
+testGetOffspring()
 # TODO There may yet be floating point errors at comparison points
-testGetWalk()
