@@ -63,8 +63,71 @@ def segmentIntersectsArc(line, center, radius, angles, orientation):
     return False
 
 
+def arcsIntersect(center1, radius1, angles1, orientation1,
+                  center2, radius2, angles2, orientation2):
+    """"
+    Returns True if arcs intersect, otherwise false
+    does not include endpoints nor not kissing
+    """
+
+    # Copy the arrays so that we don't change the originals
+    center1 = center1.copy()
+    center2 = center2.copy()
+    angles1 = angles1.copy()
+    angles2 = angles1.copy()
+
+    # First, shift so that the first arc is centered on 0,0
+    center2 -= center1
+
+    # Rotate so that second arc is centered on (x,0)
+    theta = np.arctan2(center2[1], center2[0])
+    center2 = np.matmul(rotMat(-theta), center2)
+    angles1 = (angles1 - theta) % (2 * np.pi)
+    angles2 = (angles2 - theta) % (2 * np.pi)
+
+    # If the circles are too far away from each other to intersect
+    if center2[0] >= radius1 + radius2:
+        return False
+
+    # If the two centers overlap,
+    # just check if the endpoints of one isn't in the other
+    if all(center2 == np.array([0,0])):
+        if radius1 != radius2:
+            return False
         else:
+            endPoint21 = np.matmul(rotMat(angles2[0]), [radius2, 0])
+            endPoint22 = np.matmul(rotMat(angles2[1]), [radius2, 0])
+            if isPointInSector(endPoint21, *angles1, orientation1):
                 return True
+            elif isPointInSector(endPoint22, *angles1, orientation1):
+                return True
+            endPoint11 = np.matmul(rotMat(angles1[0]), [radius1, 0])
+            endPoint12 = np.matmul(rotMat(angles1[1]), [radius1, 0])
+            if isPointInSector(endPoint11, *angles2, orientation2):
+                return True
+            elif isPointInSector(endPoint12, *angles2, orientation2):
+                return True
+            else:
+                return False
+
+
+    # Circles intesect at (x,y) and (x,-y)
+    x = (center2[0]**2 + radius1**2 - radius2**2)/(2*center2[0])
+    y = np.sqrt(radius1**2 - x**2)
+
+    # Check if the first interseciton is in both arcs
+    if isPointInSector([x, y], angles1[0], angles1[1], orientation1,
+                       includeBoundry=False):
+        if isPointInSector([x - center2[0], y], angles2[0], angles2[1],
+                           orientation2, includeBoundry=False):
+            return True
+
+    # Check if the first interseciton is in both arcs
+    if isPointInSector([x, -y], angles1[0], angles1[1], orientation1,
+                       includeBoundry=False):
+        if isPointInSector([x - center2[0], -y], angles2[0], angles2[1],
+                           orientation2, includeBoundry=False):
+            return True
 
     return False
 
