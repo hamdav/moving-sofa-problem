@@ -1,14 +1,20 @@
 import numpy as np
 from copy import deepcopy
+import time
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 
-from PlotShape import plotShape
+from PlotShape import plotShape, animateWalk
 from ShapeValidTest import shapeIsValid
+from ShapeValidTest import getWalk
 from Shape import Node, Shape
 
-plt.style.use('fivethirtyeight')
+#plt.style.use('fivethirtyeight')
+np.random.seed(0)
+
+start = time.time()
 
 # Create original shape
 nodes = [Node([0.4, 0], 0.1, 1, 0)]
@@ -32,7 +38,6 @@ halloffame = []
 N = 50
 for gen in range(N):
     # Repopulate
-    print(f"gen:{gen}")
     newPopulation = []
     for s in population:
         newPopulation.append(s)
@@ -45,15 +50,19 @@ for gen in range(N):
     for i in range(len(population))[::-1]:
         if not shapeIsValid(population[i]):
             del population[i]
-    print("HI")
 
     # Sort according to area
     population.sort(key=lambda x: x.area,reverse=True)
 
+    # Print first ten generations
+    if gen < 10:
+        print(f"Gen: {gen}, pop: {len(population)}")
+        print(f"time since start: {time.time() - start}")
     # Save best if multiple of ten
     if gen % 10 == 0:
         halloffame.append(deepcopy(population[0]))
         print(f"Gen: {gen}, pop: {len(population)}")
+        print(f"time since start: {time.time() - start}")
 
     # If there are now popSize or fewer, don't kill anyone
     if len(population) <= popSize:
@@ -72,22 +81,17 @@ def animate(i):
     ax.clear()
     plotShape(s, ax)
     ax.set_title(f"Generation {i*10}")
+    ax.set_xlim(-1,3)
+    ax.set_ylim(1,-3)
 
 anim = FuncAnimation(fig, animate, frames=len(halloffame), repeat_delay=1000)
 
-#seq = moveSequence(halloffame[-1], [], 0)
+# Set up formatting for the movie files
+Writer = animation.writers['imagemagick']
+writer = Writer(fps=5, bitrate=1800)
 
-#fig2 = plt.figure()
-#ax2 = fig2.add_subplot()
+anim.save('hof.gif', writer=writer)
 
-#def animate2(i):
-    #ax2.clear()
-    #ax2.fill(seq[i][0], seq[i][1])
-    #ax2.hlines(0,0,3)
-    #ax2.hlines(1,-1,3)
-    #ax2.vlines(0,-3,0)
-    #ax2.vlines(-1,-3,1)
+poss, rots = getWalk(halloffame[-1])
 
-
-#anim2 = FuncAnimation(fig2, animate2, frames=len(seq), repeat_delay=1000)
-plt.show()
+animateWalk(halloffame[-1], poss, rots)
