@@ -93,6 +93,10 @@ def nodesOutOfBounds(shape, pos, rot):
 
     rvList = []
 
+    # Because of comparing floats, we need a tolerance for machine
+    # precision magnitude of errors
+    tol = 1e-13
+
     for node in shape.nodes:
         # If node is not an inside node, continue
         if node.o != shape.o:
@@ -100,17 +104,18 @@ def nodesOutOfBounds(shape, pos, rot):
 
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
 
-        if nodePos[1] + node.r > 0.5:
+        if nodePos[1] + node.r > 0.5 + tol:
             rvList.append([node.ID, 1])
-        if nodePos[0] - node.r < -0.5:
+        if nodePos[0] - node.r < -0.5 - tol:
             rvList.append([node.ID, 3])
-        if nodePos[0] - node.r < -0.5 and nodePos[1] + node.r > 0.5:
+        if nodePos[0] - node.r < -0.5 - tol and \
+                nodePos[1] + node.r > 0.5 + tol:
             rvList.append([node.ID, 2])
-        if nodePos[0] + node.r > 0.5 and nodePos[1] <= -0.5:
+        if nodePos[0] + node.r > 0.5 + tol and nodePos[1] <= -0.5:
             rvList.append([node.ID, 4])
-        elif nodePos[1] - node.r < -0.5 and nodePos[0] >= 0.5:
+        elif nodePos[1] - node.r < -0.5 - tol and nodePos[0] >= 0.5:
             rvList.append([node.ID, 4])
-        elif np.linalg.norm(nodePos - np.array([0.5, -0.5])) < node.r:
+        elif np.linalg.norm(nodePos - np.array([0.5, -0.5])) < node.r + tol:
             rvList.append([node.ID, 4])
 
     return rvList
