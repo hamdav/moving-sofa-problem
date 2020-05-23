@@ -5,7 +5,7 @@ import numpy as np
 
 
 def rotMat(theta):
-    # Returns a rotation matrix that rotates vectors around (0,0)
+    """ Returns a rotation matrix that rotates vectors around (0,0) """
     s = np.sin(theta)
     c = np.cos(theta)
     return np.array([[c, -s],
@@ -13,8 +13,11 @@ def rotMat(theta):
 
 
 def isThrough(shape, pos, rot):
-    # Returns True if the shape transposed by pos and rotated
-    # (in the positive direction) by rot is through the corridor
+    """
+    Returns True if the shape transposed by pos and rotated
+    (in the positive direction) by rot is through the corridor
+    """
+
     for node in shape.nodes:
         # if node is outside shape, continue
         if not node.o == shape.o:
@@ -27,9 +30,11 @@ def isThrough(shape, pos, rot):
 
 
 def isInBounds(shape, pos, rot):
-    # Returns True if no part of shape is outside of corridor
+    "Returns True if no part of shape is outside of corridor"
+
     # Facts used: There is no need to check if lines cross the outer border,
     # if they did, that necessarily means a node is outside the outer border
+
     for node in shape.nodes:
         # Calculate the position of the node
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
@@ -54,7 +59,8 @@ def isInBounds(shape, pos, rot):
             # If arc of node intersects lower inner line,
             # TODO No need to check upper inner line?
             innerLine = np.array([[0.5, -0.5], [0.5, -100]])
-            if segmentIntersectsArc(innerLine, nodePos, node.r, shape.nodeAngles[node.ID] + rot, node.o):
+            if segmentIntersectsArc(innerLine, nodePos, node.r,
+                                    shape.nodeAngles[node.ID] + rot, node.o):
                 return False
 
     # No nodes are bad if you got here
@@ -73,15 +79,17 @@ def isInBounds(shape, pos, rot):
 
 
 def nodesOutOfBounds(shape, pos, rot):
-    # Return node ids of (inside) nodes out of bounds
-    # Also which quadrant they are out of bounds in
+    """
+    Return node ids of (inside) nodes out of bounds
+    Also which quadrant they are out of bounds in
 
-    #   II  :   I
+    #    II  :   I
     # .......:________
-    #       |   0
-    #   III |   ._____
-    #       |   |
-    #       |   | IV
+    #        |   0
+    #    III |   ._____
+    #        |   |
+    #        |   | IV
+    """
 
     rvList = []
 
@@ -109,8 +117,10 @@ def nodesOutOfBounds(shape, pos, rot):
 
 
 def posRotToShiftTwoNodes(nodePos1, nodePos2, delta1, delta2):
-    # Takes two nodes' (original) positions and where to move them
-    # Returns deltaPos and deltaRot that will acomplish this
+    """
+    Takes two nodes' (original) positions and where to move them
+    Returns deltaPos and deltaRot that will acomplish this
+    """
 
     # Calculate rotation
     vector12 = nodePos2 - nodePos1
@@ -128,9 +138,12 @@ def posRotToShiftTwoNodes(nodePos1, nodePos2, delta1, delta2):
 
 
 def posRotToRotateAroundPoint(nodePos, theta):
-    # Takes (original) position around which we wish to rotate
-    # And theta, the (signed) angle we wish to rotate with
-    # Returns the pos and rot that accomplishes this
+    """
+    Takes (original) position around which we wish to rotate
+    And theta, the (signed) angle we wish to rotate with
+    Returns the pos and rot that accomplishes this
+    """
+
     deltaRot = theta
     newNodePos = np.matmul(rotMat(theta), nodePos)
     deltaPos = nodePos - newNodePos
@@ -138,10 +151,6 @@ def posRotToRotateAroundPoint(nodePos, theta):
 
 
 def shapeIsValid(shape):
-    # Returns true if shape can be moved through a corridor with
-    # width 1 and a 90 degree turn to the right
-    # The corridor is initially centered on 0
-
     # Check if shape is within constraints to begin with
     # For each node, check that the edge of the node is within x=-0.5 and x=0.5
     for node in shape.nodes:
@@ -150,6 +159,11 @@ def shapeIsValid(shape):
             continue
         if node.pos[0] + node.r > 0.5 or node.pos[0] - node.r < -0.5:
             return False
+    """
+    Returns true if shape can be moved through a corridor with
+    width 1 and a 90 degree turn to the right
+    The corridor is initially centered on 0
+    """
 
     topNode = shape.getNodeById(getTopNodeId(shape))
     maximumY = topNode.pos[1] + topNode.r
@@ -175,9 +189,11 @@ def shapeIsValid(shape):
             return True
 
 def posRotToShiftRightWithRot(shape, pos, rot):
-    # Returns the deltapos and deltarot required to shift shape
-    # right by stepRight
-    # If it isn't possible, returns None.
+    """
+    Returns the deltapos and deltarot required to shift shape
+    right by stepRight
+    If it isn't possible, returns None.
+    """
 
     stepRight = 0.01
     stepRot = 0.01
@@ -189,7 +205,7 @@ def posRotToShiftRightWithRot(shape, pos, rot):
     # Get the top node
     topNodeID = getTopNodeId(shape, newPos, rot)
 
-    # While shape is not in bounds, rotate cw until it is 
+    # While shape is not in bounds, rotate cw until it is
     # or something new goes out of bounds
     while not isInBounds(shape, newPos, newRot):
         deltaPos, deltaRot = posRotToRotateAroundPoint(
@@ -217,8 +233,10 @@ def posRotToShiftRightWithRot(shape, pos, rot):
 
 
 def getTopNodeId(shape, pos=np.array([0, 0]), rot=0):
-    # Returns the id of the (inside) node that reaches the
-    # highest y-value
+    """
+    Returns the id of the (inside) node that reaches the
+    highest y-value
+    """
 
     maximumY = None
     topNodeID = None

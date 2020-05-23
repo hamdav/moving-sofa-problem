@@ -13,27 +13,29 @@ class Node:
 
 
 class Shape:
-    # The shape class consists of nodes with orientations.
-    # These are bound together with lines
-    # The class always contains the following properties
+    """
+    The shape class consists of nodes with orientations.
+    These are bound together with lines
+    The class always contains the following properties
 
-    # self.nodes: list of node objects
+    self.nodes: list of node objects
 
-    # self.nodeAngles: dictionare with node.ID as keys and
-    # np.array([angleIn, angleOut]) as values.
-    # The angles are the angles at which
-    # the incomming and outgoing lines touch the node,
-    # counted positively and from the x axis.
-    # Angles are always between 0 and 2 pi.
+    self.nodeAngles: dictionare with node.ID as keys and
+    np.array([angleIn, angleOut]) as values.
+    The angles are the angles at which
+    the incomming and outgoing lines touch the node,
+    counted positively and from the x axis.
+    Angles are always between 0 and 2 pi.
 
-    # self.o: 1 if orientation is positive, -1 if it is negative
-    # orientation is calculated from node angles, if the shape turns
-    # more in the positive direction, its positive and vice versa.
+    self.o: 1 if orientation is positive, -1 if it is negative
+    orientation is calculated from node angles, if the shape turns
+    more in the positive direction, its positive and vice versa.
 
-    # self.lines: list of binding lines on the form
-    # np.array([[[x1,y1], [x2, y2]], [[x1, y1], [x2, y2]], ...])
+    self.lines: list of binding lines on the form
+    np.array([[[x1,y1], [x2, y2]], [[x1, y1], [x2, y2]], ...])
 
-    # self.area: the area of the shape
+    self.area: the area of the shape
+    """
 
     def __init__(self, nodes):
         self.nodes = nodes
@@ -43,9 +45,11 @@ class Shape:
         self.calculateArea()
 
     def findNodeAngles(self):
-        # Sets self.nodeAngles such that self.nodeAngles[ID] is a tuple
-        # of the angle from the x axis that the point at which the
-        # (incomming, outgoing) line touches the node
+        """
+        Sets self.nodeAngles such that self.nodeAngles[ID] is a tuple
+        of the angle from the x axis that the point at which the
+        (incomming, outgoing) line touches the node
+        """
 
         N = len(self.nodes)
 
@@ -114,12 +118,15 @@ class Shape:
             self.lines.append(np.array([linePoint1, linePoint2]))
 
     def calculateOrientation(self):
-        # Set self.positive orientation to true if the shape is
-        # positively oriented, that is, if the total angle change
-        # by the nodes is positive.
-        # If the shape is positively oriented, ALL nodes with positive
-        # orientation are inside the shape and ALL nodes with negative
-        # orientation are outside.
+        """
+        Set self.positive orientation to true if the shape is
+        positively oriented, that is, if the total angle change
+        by the nodes is positive.
+        If the shape is positively oriented, ALL nodes with positive
+        orientation are inside the shape and ALL nodes with negative
+        orientation are outside.
+        """
+
         cumulativeAngleChange = 0
         for node in self.nodes:
             # Calculate the angle change due to node
@@ -135,11 +142,13 @@ class Shape:
         self.o = 1 if cumulativeAngleChange > 0 else -1
 
     def calculateArea(self):
-        # Calculates the area of the shape
-        # step one: calculate the area of the shape created by
-        # the binding lines and the centers of the nodes
-        # Then, add the circle sectors from the circles inside the shape
-        # and subtract the circle sectors on the outside.
+        """
+        Calculates the area of the shape
+        step one: calculate the area of the shape created by
+        the binding lines and the centers of the nodes
+        Then, add the circle sectors from the circles inside the shape
+        and subtract the circle sectors on the outside.
+        """
 
         # Create all of the points for the first shape
         # Also sum up the circle sector areas
@@ -165,7 +174,6 @@ class Shape:
 
         # Shift points so that first point is at 0,0
         points = points - points[0]
-        print(f"circleSectorAreas: {circleSectorAreas}")
 
         # Calculate the area
         area = 0.0
@@ -180,7 +188,7 @@ class Shape:
         self.area = area + circleSectorAreas
 
     def getNodeById(self, ID):
-        # Returns node with id: ID if there is one, else return None
+        "Returns node with id: ID if there is one, else return None"
         for node in self.nodes:
             if node.ID == ID:
                 return node

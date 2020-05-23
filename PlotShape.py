@@ -7,7 +7,8 @@ from ShapeValidTest import isInBounds
 
 
 def makeArtist(node, pos=np.array([0, 0]), rot=0):
-    # Creates an artist object from node
+    "Creates an artist object from node"
+
     nodePos = np.matmul(rotMat(rot), node.pos) + pos
     circle = plt.Circle(nodePos, node.r, fill=False)
     arrowbase = nodePos + node.r * np.array([0.5 * node.o, 0.5])
@@ -18,7 +19,7 @@ def makeArtist(node, pos=np.array([0, 0]), rot=0):
 
 
 def binding_line(node1, node2):
-    # Return line kissing both nodes on appropriate sides
+    "Return line kissing both nodes on appropriate sides"
 
     # Vector from center of 1 to center of 2
     vector12 = node2.pos - node1.pos
@@ -50,7 +51,7 @@ def binding_line(node1, node2):
 
 
 def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
-    # Plots shape on axis
+    "Plots shape on axis"
 
     # Plot all of the nodes:
     for node in shape.nodes:
@@ -64,8 +65,9 @@ def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
     for line in lines:
         ax.plot(line[:, 0], line[:, 1])
 
+
 def tmpShowShape(shape, pos=np.array([0, 0]), rot=0):
-    # Shows fig of shape
+    "Shows fig of shape"
 
     fig, ax = plt.subplots()
 
@@ -78,8 +80,9 @@ def tmpShowShape(shape, pos=np.array([0, 0]), rot=0):
 
     plt.show()
 
+
 def animateWalk(shape, poss, rots):
-    # Saves an animation of the walk specified by poss and rots
+    "Saves an animation of the walk specified by poss and rots"
 
     # Create figure and axis
     fig, ax = plt.subplots()
