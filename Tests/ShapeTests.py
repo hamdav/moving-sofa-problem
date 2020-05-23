@@ -10,6 +10,7 @@ from ShapeValidTest import isInBounds
 from PlotShape import makeArtist
 from PlotShape import animateWalk
 from ShapeValidTest import shapeIsValid
+from ShapeValidTest import getWalk
 
 
 def testShapePlotting():
@@ -195,4 +196,36 @@ def testShapeIsValid():
     print(shapeIsValid(s))
 
 
-testShapeIsValid()
+def testGetWalk():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -0.9], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    poss, rots = getWalk(s)
+    #animateWalk(s, poss, rots)
+
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.3, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.3, -0.9], 0.1, 1, 2))
+    nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    poss, rots = getWalk(s)
+    #animateWalk(s, poss, rots)
+
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.37, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.37, -1.2], 0.1, 1, 2))
+    nodes.append(Node([0.4, -1.2], 0.1, 1, 3))
+    nodes.append(Node([0.6, -0.6], 0.4, -1, 4))
+    s = Shape(nodes)
+
+    poss, rots = getWalk(s)
+    print(f"Length: {len(poss)}")
+    animateWalk(s, poss, rots)
+
+
+# TODO There may yet be floating point errors at comparison points
+testGetWalk()
