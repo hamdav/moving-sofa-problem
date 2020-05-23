@@ -158,14 +158,6 @@ def posRotToRotateAroundNode(shape, currentRot, theta, nodeID):
 
 
 def shapeIsValid(shape):
-    # Check if shape is within constraints to begin with
-    # For each node, check that the edge of the node is within x=-0.5 and x=0.5
-    for node in shape.nodes:
-        # If node isn't inside node
-        if node.o != shape.o:
-            continue
-        if node.pos[0] + node.r > 0.5 or node.pos[0] - node.r < -0.5:
-            return False
     """
     Returns true if shape can be moved through a corridor with
     width 1 and a 90 degree turn to the right
@@ -174,14 +166,16 @@ def shapeIsValid(shape):
 
     topNode = shape.getNodeById(getTopNodeId(shape))
     maximumY = topNode.pos[1] + topNode.r
+    rightNode = shape.getNodeById(getRightNodeId(shape))
+    minimumX = rightNode.pos[0] - topNode.r
 
-    # Place shape so that no part of it is beyond the beginning of the turn
-    pos = [0, -0.5 - maximumY]
+    # Place shape as far up and as far left as possible
+    pos = [-0.5 - minimumX, 0.5 - maximumY]
     rot = 0
 
-    # Move shape up until an (inside) node hits the far wall
-    pos = [0, 0.5 - maximumY]
-    rot = 0
+    # Check that it is in bounds to begin with
+    if not isInBounds(shape, pos, rot):
+        return False
 
     while True:
         deltaPosRot = posRotToShiftRightWithRot(shape, pos, rot)
@@ -203,7 +197,7 @@ def posRotToShiftRightWithRot(shape, pos, rot):
     """
 
     stepRight = 0.01
-    stepRot = 0.01
+    stepRot = -0.01
 
     # Move shape right
     newPos = pos + np.array([stepRight, 0])
@@ -259,3 +253,25 @@ def getTopNodeId(shape, pos=np.array([0, 0]), rot=0):
             topNodeID = node.ID
 
     return topNodeID
+
+
+def getRightNodeId(shape, pos=np.array([0, 0]), rot=0):
+    """
+    Returns the id of the (inside) node that reaches the
+    lowest x-value
+    """
+
+    minimumX = None
+    rightNodeID = None
+    for node in shape.nodes:
+        # If node isn't inside node
+        if node.o != shape.o:
+            continue
+
+        nodePos = np.matmul(rotMat(rot), node.pos) + pos
+
+        if minimumX is None or nodePos[0] - node.r < minimumX:
+            minimumX = nodePos[0] - node.r
+            rightNodeID = node.ID
+
+    return rightNodeID
