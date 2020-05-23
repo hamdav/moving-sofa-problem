@@ -16,15 +16,13 @@ def boxesIntersect(line1, line2):
 
 
 def segmentIntersectsArc(line, center, radius, angles, orientation):
-    # Returns true if line intersects the arc defined by center,
-    # radius, angles =[start, end] and orientation: +1 or -1
-    # Touching should not be considered intersecting
-    # If a line kisses the circle, it isn't instersecting it
-    # Touching endpoints is also okay, but only if it's both line and arc endpoint
-
-    # If orientation is -1, switch angleIn and angleOut
-    if orientation == -1:
-        angles = angles[::-1]
+    """
+    Returns true if line intersects the arc defined by center,
+    radius, angles =[start, end] and orientation: +1 or -1
+    Touching should not be considered intersecting
+    If a line kisses the circle, it isn't instersecting it
+    Touching endpoints is also okay, but only if it's both line and arc endpoint
+    """
 
     # Translate so that arc center is at 0, 0
     line = line - center
@@ -58,34 +56,69 @@ def segmentIntersectsArc(line, center, radius, angles, orientation):
     # Check if any of the candidate xs is in the arc
     # Include endpoints
     for x in candidates:
-        phi = np.arctan2(lineY, x) % (2 * np.pi)
-        if angleBegin < angleEnd:
-            # Arc does not go across 0
-            if angleBegin <= phi and phi <= angleEnd:
-                return True
+        if isPointInSector([x, lineY], angleBegin, angleEnd,
+                           orientation, includeBoundry=True):
+            return True
+
+    return False
+
+
         else:
-            # Arc does go across 0 angle, making begin and end angles opposite
-            # Theta is in arc if it is greater than begin or less than end
-            if phi >= angleBegin or phi <= angleEnd:
                 return True
 
     return False
 
 
-def linesIntersect(line1, line2):
-    # line arguments are on the form [[p1x, p1y], [p2x, p2y]]
-    # The line segments intersect if
-    # the scalar product of (the vector from p11 to p21) and (a vector normal to line1) and
-    # the scalar product of (the vector from p11 to p22) and (the vector normal to line1)
-    # have different signs
-    # AND vice versa, that is:
-    # the scalar product of (the vector from p21 to p11) and (a vector normal to line2)
-    # the scalar product of (the vector from p21 to p12) and (the vector normal to line2)
-    # have different signs
-    # p11 is the first point on line1 and so on.
-    # All arguments should be numpy arrays.
+def isPointInSector(point, angleBegin, angleEnd, orientation,
+                    includeBoundry=False):
+    """
+    Returns true if point is in the (infinite radius) sector
+    defined by angleBegin, angleEnd and orientation
+    does not include boundry by default, point on boundry not considered "in"
+    """
 
-    # Does NOT include endpoints
+    angleBegin %= (2 * np.pi)
+    angleEnd %= (2 * np.pi)
+    theta = np.arctan2(point[1], point[0]) % (2 * np.pi)
+
+    # If orientation is negative, switch beginning and end, making it positive
+    if orientation == -1:
+        angleBegin, angleEnd = angleEnd, angleBegin
+
+    if angleBegin < angleEnd:
+        # 0 isn't included
+        if includeBoundry:
+            return angleBegin <= theta and theta <= angleEnd
+        else:
+            return angleBegin < theta and theta < angleEnd
+
+    elif angleBegin == angleEnd:
+        raise ValueError('zero length arc given')
+
+    else:
+        # 0 is included
+        if includeBoundry:
+            return theta <= angleEnd or angleBegin <= theta
+        else:
+            return theta < angleEnd or angleBegin < theta
+
+
+def linesIntersect(line1, line2):
+    """
+    line arguments are on the form [[p1x, p1y], [p2x, p2y]]
+    The line segments intersect if
+    the scalar product of (the vector from p11 to p21) and (a vector normal to line1) and
+    the scalar product of (the vector from p11 to p22) and (the vector normal to line1)
+    have different signs
+    AND vice versa, that is:
+    the scalar product of (the vector from p21 to p11) and (a vector normal to line2)
+    the scalar product of (the vector from p21 to p12) and (the vector normal to line2)
+    have different signs
+    p11 is the first point on line1 and so on.
+    All arguments should be numpy arrays.
+
+    Does NOT include endpoints
+    """
 
     vector1121 = line1[0] - line2[0]
     vector1122 = line1[0] - line2[1]
