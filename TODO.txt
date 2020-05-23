@@ -1,0 +1,3 @@
+rename LineMath to intersects??
+rename linesIntersect to segmentsIntersect??
+
