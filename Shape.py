@@ -1,4 +1,10 @@
 import numpy as np
+from copy import deepcopy
+import itertools
+
+from LineMath import linesIntersect
+from LineMath import segmentIntersectsArc
+from LineMath import arcsIntersect
 
 
 class Node:
@@ -43,6 +49,95 @@ class Shape:
         self.calculateBindingLines()
         self.calculateOrientation()
         self.calculateArea()
+
+    def recalculate(self):
+        "Recalculates nodeAngles, binding lines, orientation and area"
+        self.findNodeAngles()
+        self.calculateBindingLines()
+        self.calculateOrientation()
+        self.calculateArea()
+
+    def getOffspring(self, bigMutations=False):
+        """
+        Returns a mutated copy of shape.
+
+        If bigMutations is True, number of nodes can be changed
+        otherwise, it's just node pos and radii that can change
+        Mutations are normally distributed with mean 0 and
+        """
+
+        # Set probabillities
+        mutatePosProb = 1.0/len(self.nodes)
+        mutateRadProb = 1.0/len(self.nodes)
+
+        # Set rates
+        posStd = 0.05
+        radStd = 0.02
+
+        # Create newShape
+        newNodes = deepcopy(self.nodes)
+        newShape = Shape(newNodes)
+
+        for node in newShape.nodes:
+            # With probabillity mutatePosProb, mutate position
+            if np.random.random_sample() < mutatePosProb:
+                deltaPos = np.random.normal(0, posStd, 2)
+                node.pos += deltaPos
+                # Check that this mutation didn't make it not simple
+                newShape.recalculate()
+                if not newShape.isSimple():
+                    # If it did, undo it
+                    node.pos -= deltaPos
+                    newShape.recalculate()
+
+            # With probabillity mutateRadProb, mutate radius
+            if np.random.random_sample() < mutateRadProb:
+                deltaRad = np.random.normal(0, radStd)
+                # The radius cannot be 0 or negative
+                node.r += deltaRad
+                # Check that this mutation didn't make it not simple
+                newShape.recalculate()
+                if not newShape.isSimple():
+                    # If it did, undo it
+                    node.r -= deltaRad
+                    newShape.recalculate()
+
+        return Shape(newNodes)
+
+    def isSimple(self):
+        "Checks that the shape is simple, if so, return True, else False"
+
+        # Check that no two binding lines cross
+        for linePair in itertools.combinations(self.lines, 2):
+            if linesIntersect(linePair[0], linePair[1]):
+                return False
+
+        # Check that no arc intersects a binding line
+        for node in self.nodes:
+            for line in self.lines:
+                if segmentIntersectsArc(line, node.pos, node.r,
+                                        self.nodeAngles[node.ID], node.o):
+                    return False
+
+        # Check that no two arcs intersect each other
+        for nodePair in itertools.combinations(self.nodes, 2):
+            if arcsIntersect(nodePair[0].pos, nodePair[0].r,
+                             self.nodeAngles[nodePair[0].ID], nodePair[0].o,
+                             nodePair[1].pos, nodePair[1].r,
+                             self.nodeAngles[nodePair[1].ID], nodePair[1].o):
+                return False
+
+        # No consecutive nodes can be inside each other
+        for nodeIndex in range(len(self.nodes)):
+            node1 = self.nodes[nodeIndex]
+            node2 = self.nodes[nodeIndex-1]
+            if np.linalg.norm(node1.pos - node2.pos) + node1.r < node2.r:
+                return False
+            if np.linalg.norm(node1.pos - node2.pos) + node2.r < node1.r:
+                return False
+
+        # Nothing intersects! Yay :)
+        return True
 
     def findNodeAngles(self):
         """
