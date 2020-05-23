@@ -217,16 +217,25 @@ def testGetWalk():
     #animateWalk(s, poss, rots)
 
     nodes = [Node([0.4, 0], 0.1, 1, 0)]
-    nodes.append(Node([-0.37, 0], 0.1, 1, 1))
-    nodes.append(Node([-0.37, -1.2], 0.1, 1, 2))
-    nodes.append(Node([0.4, -1.2], 0.1, 1, 3))
+    nodes.append(Node([-0.3, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.3, -1.3], 0.1, 1, 2))
+    nodes.append(Node([0.4, -1.3], 0.1, 1, 3))
     nodes.append(Node([0.6, -0.6], 0.4, -1, 4))
+    s = Shape(nodes)
+
+    poss, rots = getWalk(s)
+    #print(f"Length: {len(poss)}")
+    #animateWalk(s, poss, rots)
+
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -1.3], 0.1, 1, 2))
+    nodes.append(Node([0.4, -1.3], 0.1, 1, 3))
     s = Shape(nodes)
 
     poss, rots = getWalk(s)
     print(f"Length: {len(poss)}")
     animateWalk(s, poss, rots)
-
 
 def timeRecalculate():
     nodes = [Node([0.4, 0], 0.1, 1, 0)]
@@ -241,6 +250,18 @@ def timeRecalculate():
     end = time()
     print(f"Time taken: {end-start:.2f} seconds")
 
+def timeShapeIsValid():
+    nodes = [Node([0.4, 0], 0.1, 1, 0)]
+    nodes.append(Node([-0.0, 0], 0.1, 1, 1))
+    nodes.append(Node([-0.0, -1.3], 0.1, 1, 2))
+    nodes.append(Node([0.4, -1.3], 0.1, 1, 3))
+    s = Shape(nodes)
+
+    start = time()
+    for i in range(1):
+        x = shapeIsValid(s)
+    end = time()
+    print(f"Time taken: {end-start:.2f} seconds")
 
 def testGetOffspring():
     nodes = [Node([0.4, 0], 0.1, 1, 0)]
@@ -255,7 +276,6 @@ def testGetOffspring():
         tmpShowShape(s)
 
 
-
-
-testGetOffspring()
+timeShapeIsValid()
+#testGetWalk()
 # TODO There may yet be floating point errors at comparison points
