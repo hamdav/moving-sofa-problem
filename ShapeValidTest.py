@@ -151,8 +151,7 @@ def posRotToRotateAroundNode(shape, currentRot, theta, nodeID):
 
     deltaRot = theta
     origNodePos = np.matmul(rotMat(currentRot), shape.getNodeById(nodeID).pos)
-    newNodePos = np.matmul(rotMat(currentRot + theta),
-                           shape.getNodeById(nodeID).pos)
+    newNodePos = np.matmul(rotMat(theta), origNodePos)
     deltaPos = origNodePos - newNodePos
     return (deltaPos, deltaRot)
 
@@ -260,7 +259,7 @@ def posRotToShiftRightWithRot(shape, pos, rot):
     # or something new goes out of bounds
     while not isInBounds(shape, newPos, newRot):
         deltaPos, deltaRot = posRotToRotateAroundNode(
-            shape, rot, stepRot, topNodeID)
+            shape, newRot, stepRot, topNodeID)
 
         # Check all of the out of bounds (inside) nodes
         for nodeWithQuadrant in nodesOutOfBounds(shape, newPos + deltaPos,
