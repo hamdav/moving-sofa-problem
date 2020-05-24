@@ -45,13 +45,21 @@ class Shape:
 
     def __init__(self, nodes):
         self.nodes = nodes
-        self.findNodeAngles()
-        self.calculateBindingLines()
-        self.calculateOrientation()
-        self.calculateArea()
+        self.recalculate()
 
     def recalculate(self):
-        "Recalculates nodeAngles, binding lines, orientation and area"
+        """"
+        Recalculates nodeAngles, binding lines, orientation, area and nodeIDs
+        WARNING! Never recalculate a shape that has already been out
+        in the world. The switching of nodeIDs may cause probelms. 
+        Recalculate is simply meant to be done at creation to make shape correct.
+        """
+
+        ID = 0
+        for node in self.nodes:
+            node.ID = ID
+            ID += 1
+
         self.findNodeAngles()
         self.calculateBindingLines()
         self.calculateOrientation()
@@ -61,7 +69,8 @@ class Shape:
         """
         Returns a mutated copy of shape.
 
-        If bigMutations is True, number of nodes can be changed
+        If bigMutations is True, number of nodes
+        and orientation can be changed
         otherwise, it's just node pos and radii that can change
         Mutations are normally distributed with mean 0 and
         """
@@ -69,6 +78,8 @@ class Shape:
         # Set probabillities
         mutatePosProb = 1.0/len(self.nodes)
         mutateRadProb = 1.0/len(self.nodes)
+        mutateNoProb = 0.1
+        mutateOrProb = 0.1
 
         # Set rates
         posStd = 0.05
@@ -101,8 +112,47 @@ class Shape:
                     # If it did, undo it
                     node.r -= deltaRad
                     newShape.recalculate()
+        if bigMutations:
+            # with probabillity mutateNoProb, add a node between two nodes
+            if np.random.random_sample() < mutateNoProb:
+                # NodeID for node before which to insert new node
+                nodeID = np.random.choice(len(newShape.nodes))
+                newNodePos = (newShape.nodes[nodeID].pos + newShape.nodes[nodeID-1].pos)/2.0
+                # r is at least 0.01 and expected around 0.1
+                newNodeR = np.abs(np.random.normal(0.1,0.05)) + 0.01
+                newNodeO = np.random.choice([-1,1])
+                newNode = Node(newNodePos, newNodeR, newNodeO, nodeID)
+                newShape.nodes.insert(nodeID, newNode)
 
-        return Shape(newNodes)
+                # Check that shape is still valid
+                newShape.recalculate()
+                if not newShape.isSimple():
+                    del newShape.nodes[nodeID]
+                    newShape.recalculate()
+
+            # With probabillity mutateNoProb, remove a node
+            if np.random.random_sample() < mutateNoProb and len(newShape.nodes) >= 3:
+                # NodeID for node to remove
+                nodeID = np.random.choice(len(newShape.nodes))
+                removedNode = newShape.nodes[nodeID]
+                del newShape.nodes[nodeID]
+                # Check that shape is still valid
+                newShape.recalculate()
+                if not newShape.isSimple():
+                    newShape.nodes.insert(nodeID, removedNode)
+                    newShape.recalculate()
+
+            # With probabillity mutateOrProb, change a nodes orientation
+            if np.random.random_sample() < mutateOrProb:
+                nodeID = np.random.choice(len(newShape.nodes))
+                newShape.nodes[nodeID].o *= -1
+                # Check that shape is still valid
+                newShape.recalculate()
+                if not newShape.isSimple():
+                    newShape.nodes[nodeID].o *= -1
+                    newShape.recalculate()
+
+        return newShape
 
     def isSimple(self):
         "Checks that the shape is simple, if so, return True, else False"
@@ -128,15 +178,20 @@ class Shape:
                 return False
 
         # No consecutive nodes can be inside each other
+        # No consecutive nodes of opposite orientation 
+        # can intersect
         for nodeIndex in range(len(self.nodes)):
             node1 = self.nodes[nodeIndex]
             node2 = self.nodes[nodeIndex-1]
-            if np.linalg.norm(node1.pos - node2.pos) + node1.r < node2.r:
+            dist = np.linalg.norm(node1.pos - node2.pos)
+            if dist + node1.r < node2.r:
                 return False
-            if np.linalg.norm(node1.pos - node2.pos) + node2.r < node1.r:
+            if dist + node2.r < node1.r:
                 return False
-
-        # Nothing intersects! Yay :)
+            if node1.o != node2.o:
+                # They cannot intersect
+                if dist < node1.r + node2.r:
+                    return False
         return True
 
     def findNodeAngles(self):
@@ -282,10 +337,3 @@ class Shape:
         # Add the circleSectorAreas
         self.area = area + circleSectorAreas
 
-    def getNodeById(self, ID):
-        "Returns node with id: ID if there is one, else return None"
-        for node in self.nodes:
-            if node.ID == ID:
-                return node
-
-        return None
