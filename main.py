@@ -18,9 +18,10 @@ start = time.time()
 
 # Create original shape
 nodes = [Node([0.4, 0], 0.1, 1, 0)]
-nodes.append(Node([-0.0, 0], 0.1, 1, 1))
-nodes.append(Node([-0.0, -0.9], 0.1, 1, 2))
-nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
+nodes.append(Node([-0.3, 0], 0.1, 1, 1))
+nodes.append(Node([-0.3, -1.0], 0.1, 1, 2))
+nodes.append(Node([0.4, -1.0], 0.1, 1, 3))
+nodes.append(Node([0.6, -0.5], 0.4, -1, 3))
 original = Shape(nodes)
 
 
@@ -35,13 +36,13 @@ for _ in range(popSize):
 halloffame = []
 
 # run N generations
-N = 50
+N = 300
 for gen in range(N):
     # Repopulate
     newPopulation = []
     for s in population:
         newPopulation.append(s)
-        t = s.getOffspring()
+        t = s.getOffspring(bigMutations=True)
         newPopulation.append(t)
 
     population = newPopulation
@@ -55,11 +56,11 @@ for gen in range(N):
     population.sort(key=lambda x: x.area,reverse=True)
 
     # Print first ten generations
-    if gen < 10:
-        print(f"Gen: {gen}, pop: {len(population)}")
-        print(f"time since start: {time.time() - start}")
-    # Save best if multiple of ten
-    if gen % 10 == 0:
+    #if gen < 10:
+        #print(f"Gen: {gen}, pop: {len(population)}")
+        ##print(f"time since start: {time.time() - start}")
+    # Save best if multiple of 2
+    if gen % 2 == 1:
         halloffame.append(deepcopy(population[0]))
         print(f"Gen: {gen}, pop: {len(population)}")
         print(f"time since start: {time.time() - start}")
