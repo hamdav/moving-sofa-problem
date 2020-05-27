@@ -271,11 +271,10 @@ def testGetOffspring():
     s = Shape(nodes)
 
     tmpShowShape(s)
-    for i in range(10):
-        s = s.getOffspring()
+    for i in range(100):
+        s = s.getOffspring(bigMutations=True)
         tmpShowShape(s)
 
 
-timeShapeIsValid()
-#testGetWalk()
+testGetOffspring()
 # TODO There may yet be floating point errors at comparison points
