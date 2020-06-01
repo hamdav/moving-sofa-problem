@@ -4,7 +4,7 @@ from time import time
 
 from PlotShape import binding_line
 from PlotShape import plotShape
-from PlotShape import tmpShowShape
+from PlotShape import showShape
 from Shape import Node
 from Shape import Shape
 from ShapeValidTest import isInBounds
@@ -192,7 +192,7 @@ def testShapeIsValid():
     nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
     s = Shape(nodes)
 
-    tmpShowShape(s)
+    showShape(s)
 
     print(shapeIsValid(s))
 
@@ -270,10 +270,10 @@ def testGetOffspring():
     nodes.append(Node([0.4, -0.9], 0.1, 1, 3))
     s = Shape(nodes)
 
-    tmpShowShape(s)
+    showShape(s)
     for i in range(100):
         s = s.getOffspring(bigMutations=True)
-        tmpShowShape(s)
+        showShape(s)
 
 
 testGetOffspring()

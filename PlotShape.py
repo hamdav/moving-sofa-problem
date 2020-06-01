@@ -66,7 +66,7 @@ def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
         ax.plot(line[:, 0], line[:, 1])
 
 
-def tmpShowShape(shape, pos=np.array([0, 0]), rot=0):
+def showShape(shape, pos=np.array([0, 0]), rot=0):
     "Shows fig of shape"
 
     fig, ax = plt.subplots()
