@@ -74,7 +74,7 @@ def arcsIntersect(center1, radius1, angles1, orientation1,
     center1 = center1.copy()
     center2 = center2.copy()
     angles1 = angles1.copy()
-    angles2 = angles1.copy()
+    angles2 = angles2.copy()
 
     # First, shift so that the first arc is centered on 0,0
     center2 -= center1
@@ -87,6 +87,13 @@ def arcsIntersect(center1, radius1, angles1, orientation1,
 
     # If the circles are too far away from each other to intersect
     if center2[0] >= radius1 + radius2:
+        return False
+    # If one circle is completely inside another, they don't itersect
+    # Circle2 is in circle1
+    if radius1 >= center2[0] + radius2:
+        return False
+    # Circle1 is in circle2
+    if radius2 >= center2[0] + radius1:
         return False
 
     # If the two centers overlap,
@@ -114,6 +121,8 @@ def arcsIntersect(center1, radius1, angles1, orientation1,
     # Circles intesect at (x,y) and (x,-y)
     x = (center2[0]**2 + radius1**2 - radius2**2)/(2*center2[0])
     y = np.sqrt(radius1**2 - x**2)
+    if np.isnan(y):
+        breakpoint()
 
     # Check if the first interseciton is in both arcs
     if isPointInSector([x, y], angles1[0], angles1[1], orientation1,
@@ -122,7 +131,7 @@ def arcsIntersect(center1, radius1, angles1, orientation1,
                            orientation2, includeBoundry=False):
             return True
 
-    # Check if the first interseciton is in both arcs
+    # Check if the second interseciton is in both arcs
     if isPointInSector([x, -y], angles1[0], angles1[1], orientation1,
                        includeBoundry=False):
         if isPointInSector([x - center2[0], -y], angles2[0], angles2[1],
