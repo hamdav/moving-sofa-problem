@@ -1,6 +1,6 @@
-from ShapeOps import randomShape
+from Shape import Shape
 from PlotShape import showShape
 
 for i in range(10):
-    s = randomShape()
+    s = Shape()
     showShape(s)
