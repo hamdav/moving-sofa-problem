@@ -8,7 +8,7 @@ from LineMath import arcsIntersect
 
 
 class Node:
-    def __init__(self, pos, radius, orientation, ID):
+    def __init__(self, pos, radius, orientation, ID=0):
         # X and Y position on center
         self.pos = np.array(pos)
         # Radius
@@ -51,7 +51,7 @@ class Shape:
         """"
         Recalculates nodeAngles, binding lines, orientation, area and nodeIDs
         WARNING! Never recalculate a shape that has already been out
-        in the world. The switching of nodeIDs may cause probelms. 
+        in the world. The switching of nodeIDs may cause probelms.
         Recalculate is simply meant to be done at creation to make shape correct.
         """
 
@@ -60,12 +60,20 @@ class Shape:
             node.ID = ID
             ID += 1
 
+        # Check that calculating stuff is even possible
+        if not self.nodePositionsIsValid():
+            self.valid = False
+            return
+
         self.findNodeAngles()
         self.calculateBindingLines()
         self.calculateOrientation()
         self.calculateArea()
 
-    def getOffspring(self, bigMutations=False):
+        # If it isn't simple, it isn't valid
+        self.valid = self.isSimple()
+
+    def mutateInPlace(self, bigMutations=False):
         """
         Returns a mutated copy of shape.
 
@@ -85,97 +93,79 @@ class Shape:
         posStd = 0.05
         radStd = 0.02
 
-        # Create newShape
-        newNodes = deepcopy(self.nodes)
-        newShape = Shape(newNodes)
-
-        for node in newShape.nodes:
+        for node in self.nodes:
             # With probabillity mutatePosProb, mutate position
             if np.random.random_sample() < mutatePosProb:
                 deltaPos = np.random.normal(0, posStd, 2)
                 node.pos += deltaPos
                 # Check that this mutation didn't make it not simple
-                newShape.recalculate()
-                if not newShape.isSimple():
+                self.recalculate()
+                if not self.valid:
                     # If it did, undo it
                     node.pos -= deltaPos
-                    newShape.recalculate()
+                    self.recalculate()
 
             # With probabillity mutateRadProb, mutate radius
             if np.random.random_sample() < mutateRadProb:
                 deltaRad = np.random.normal(0, radStd)
                 # The radius cannot be 0 or negative
+                if node.r + deltaRad <= 0:
+                    continue
                 node.r += deltaRad
                 # Check that this mutation didn't make it not simple
-                newShape.recalculate()
-                if not newShape.isSimple():
+                self.recalculate()
+                if not self.valid:
                     # If it did, undo it
                     node.r -= deltaRad
-                    newShape.recalculate()
+                    self.recalculate()
+
         if bigMutations:
             # with probabillity mutateNoProb, add a node between two nodes
             if np.random.random_sample() < mutateNoProb:
                 # NodeID for node before which to insert new node
-                nodeID = np.random.choice(len(newShape.nodes))
-                newNodePos = (newShape.nodes[nodeID].pos + newShape.nodes[nodeID-1].pos)/2.0
+                nodeID = np.random.choice(len(self.nodes))
+                newNodePos = (self.nodes[nodeID].pos + self.nodes[nodeID-1].pos)/2.0
                 # r is at least 0.01 and expected around 0.1
                 newNodeR = np.abs(np.random.normal(0.1,0.05)) + 0.01
                 newNodeO = np.random.choice([-1,1])
                 newNode = Node(newNodePos, newNodeR, newNodeO, nodeID)
-                newShape.nodes.insert(nodeID, newNode)
+                self.nodes.insert(nodeID, newNode)
 
                 # Check that shape is still valid
-                newShape.recalculate()
-                if not newShape.isSimple():
-                    del newShape.nodes[nodeID]
-                    newShape.recalculate()
+                self.recalculate()
+                if not self.valid:
+                    del self.nodes[nodeID]
+                    self.recalculate()
 
             # With probabillity mutateNoProb, remove a node
-            if np.random.random_sample() < mutateNoProb and len(newShape.nodes) >= 3:
+            if np.random.random_sample() < mutateNoProb and len(self.nodes) >= 3:
                 # NodeID for node to remove
-                nodeID = np.random.choice(len(newShape.nodes))
-                removedNode = newShape.nodes[nodeID]
-                del newShape.nodes[nodeID]
+                nodeID = np.random.choice(len(self.nodes))
+                removedNode = self.nodes[nodeID]
+                del self.nodes[nodeID]
                 # Check that shape is still valid
-                newShape.recalculate()
-                if not newShape.isSimple():
-                    newShape.nodes.insert(nodeID, removedNode)
-                    newShape.recalculate()
+                self.recalculate()
+                if not self.valid:
+                    self.nodes.insert(nodeID, removedNode)
+                    self.recalculate()
 
             # With probabillity mutateOrProb, change a nodes orientation
             if np.random.random_sample() < mutateOrProb:
-                nodeID = np.random.choice(len(newShape.nodes))
-                newShape.nodes[nodeID].o *= -1
+                nodeID = np.random.choice(len(self.nodes))
+                self.nodes[nodeID].o *= -1
                 # Check that shape is still valid
-                newShape.recalculate()
-                if not newShape.isSimple():
-                    newShape.nodes[nodeID].o *= -1
-                    newShape.recalculate()
+                self.recalculate()
+                if not self.valid:
+                    self.nodes[nodeID].o *= -1
+                    self.recalculate()
 
-        return newShape
+    def nodePositionsIsValid(self):
+        """"
+        Checks the simple validity of shape
 
-    def isSimple(self):
-        "Checks that the shape is simple, if so, return True, else False"
-
-        # Check that no two binding lines cross
-        for linePair in itertools.combinations(self.lines, 2):
-            if linesIntersect(linePair[0], linePair[1]):
-                return False
-
-        # Check that no arc intersects a binding line
-        for node in self.nodes:
-            for line in self.lines:
-                if segmentIntersectsArc(line, node.pos, node.r,
-                                        self.nodeAngles[node.ID], node.o):
-                    return False
-
-        # Check that no two arcs intersect each other
-        for nodePair in itertools.combinations(self.nodes, 2):
-            if arcsIntersect(nodePair[0].pos, nodePair[0].r,
-                             self.nodeAngles[nodePair[0].ID], nodePair[0].o,
-                             nodePair[1].pos, nodePair[1].r,
-                             self.nodeAngles[nodePair[1].ID], nodePair[1].o):
-                return False
+        Just checks that no nodes are too close to each other
+        to even construct the binding lines.
+        """
 
         # No consecutive nodes can be inside each other
         # No consecutive nodes of opposite orientation 
@@ -192,6 +182,31 @@ class Shape:
                 # They cannot intersect
                 if dist < node1.r + node2.r:
                     return False
+        return True
+
+    def isSimple(self):
+        "Checks that the shape is simple, if so, return True, else False"
+
+        # Check that no two binding lines cross
+        for line1, line2 in itertools.combinations(self.lines, 2):
+            if linesIntersect(line1, line2):
+                return False
+
+        # Check that no arc intersects a binding line
+        for node in self.nodes:
+            for line in self.lines:
+                if segmentIntersectsArc(line, node.pos, node.r,
+                                        self.nodeAngles[node.ID], node.o):
+                    return False
+
+        # Check that no two arcs intersect each other
+        for node1, node2 in itertools.combinations(self.nodes, 2):
+            if arcsIntersect(node1.pos, node1.r,
+                             self.nodeAngles[node1.ID], node1.o,
+                             node2.pos, node2.r,
+                             self.nodeAngles[node2.ID], node2.o):
+                return False
+
         return True
 
     def findNodeAngles(self):
@@ -239,6 +254,7 @@ class Shape:
             alpha = alpha % (2*np.pi)
             beta = beta % (2*np.pi)
 
+            #breakpoint()
             # Update nodeAngles
             if node1.ID in self.nodeAngles:
                 self.nodeAngles[node1.ID][1] = alpha
@@ -251,8 +267,9 @@ class Shape:
                 self.nodeAngles[node2.ID] = np.array([beta, None])
 
     def calculateBindingLines(self):
-        self.lines = []
         N = len(self.nodes)
+        self.lines = np.empty((N,2,2))
+        #breakpoint()
         for nodeIndex in range(N):
             node1 = self.nodes[nodeIndex]
             node2 = self.nodes[(nodeIndex+1) % N]
@@ -265,7 +282,7 @@ class Shape:
             linePoint2 = node2.pos + node2.r * \
                 np.array([np.cos(beta), np.sin(beta)])
 
-            self.lines.append(np.array([linePoint1, linePoint2]))
+            self.lines[nodeIndex] = np.array([linePoint1, linePoint2])
 
     def calculateOrientation(self):
         """
@@ -302,7 +319,7 @@ class Shape:
 
         # Create all of the points for the first shape
         # Also sum up the circle sector areas
-        points = []
+        points = np.empty((0, 2), float)
         circleSectorAreas = 0
         for node in self.nodes:
             pos = node.pos
@@ -310,9 +327,9 @@ class Shape:
             deltap1 = node.r * np.array([np.cos(angleIn), np.sin(angleIn)])
             deltap2 = node.r * np.array([np.cos(angleOut), np.sin(angleOut)])
 
-            points.append(pos + deltap1)
-            points.append(pos)
-            points.append(pos + deltap2)
+            points = np.vstack((points, pos + deltap1))
+            points = np.vstack((points, pos))
+            points = np.vstack((points, pos + deltap2))
 
             # Calculate and add the circle sector area
             # The angle change is out - in if positively oriented
