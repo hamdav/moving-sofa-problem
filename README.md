@@ -13,7 +13,7 @@ This program attempts to solve that problem by optimizing the shape of the sofa 
 
 # Status
 
-Am currently redisigning the evolution algorithm, the previous one was too slow (and quite messy to be honest), but it did accomplish this marvelous sofa:
+Am currently redisigning the evolution algorithm, the previous one was too slow (and quite messy to be honest), but it did accomplish the marvelous sofa below. More funny gifs can be found in the deap branch
 
 ![](TheFirstOfTheGreat.gif)
 
