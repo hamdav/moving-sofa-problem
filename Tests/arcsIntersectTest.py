@@ -79,7 +79,7 @@ arc1 = [c1, 1, a1, 1]
 c2 = np.array([1, -1])
 a2 = np.array([0, 3])
 arc2 = [c2, 1, a2, 1]
-print(f"endpoint touching middle: Should be false, is {arcsIntersect(*arc1, *arc2)}")
+print(f"endpoint touching middle: Should be true??, is {arcsIntersect(*arc1, *arc2)}")
 
 fig, ax = plt.subplots()
 x, y = arc(c1, 1, *a1, 1)
