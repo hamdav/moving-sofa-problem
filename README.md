@@ -11,6 +11,11 @@ What is the maximum area of the sofa that you could carry around the corner?
 
 This program attempts to solve that problem by optimizing the shape of the sofa using a genetic algorithm
 
+# Status
+
+Am currently redisigning the evolution algorithm, the previous one was too slow (and quite messy to be honest), but it did accomplish this marvelous sofa:
+![](theFirstOfTheGreat.gif)
+
 ------------------------------------------------------------------------------
 notes:
 
