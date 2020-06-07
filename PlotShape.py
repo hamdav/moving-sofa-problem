@@ -1,21 +1,34 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
+from matplotlib import patches
 import numpy as np
+
 from LineMath import rotMat
 from ShapeValidTest import isInBounds
 
 
-def makeArtist(node, pos=np.array([0, 0]), rot=0):
+def makeArtist(node, nodeAngles, pos=np.array([0, 0]), rot=0):
     "Creates an artist object from node"
 
+    if node.o == -1:
+        nodeAngles = nodeAngles[::-1]
+
+    # Calculate position
     nodePos = np.matmul(rotMat(rot), node.pos) + pos
-    circle = plt.Circle(nodePos, node.r, fill=False)
+    # Calculate angles (in degrees)
+    nodeAngles = [((nodeAngles[0] + rot) % (2 * np.pi)) * 180 / np.pi,
+                  ((nodeAngles[1] + rot) % (2 * np.pi)) * 180 / np.pi]
+    # Create arcs
+    arcIn = patches.Arc(nodePos, 2*node.r, 2*node.r, 0, *nodeAngles, color='k')
+    arcOut = patches.Arc(nodePos, 2*node.r, 2*node.r, 0, *nodeAngles[::-1],
+                         linestyle='--', color='gainsboro')
+    # Create arrow
     arrowbase = nodePos + node.r * np.array([0.5 * node.o, 0.5])
     arrowdelta = node.r * np.array([-node.o, 0])
-    arrow = plt.Arrow(*arrowbase, *arrowdelta, node.r/2, color="r")
+    arrow = plt.Arrow(*arrowbase, *arrowdelta, node.r/2, color="mistyrose")
 
-    return [circle, arrow]
+    return [arcIn, arcOut, arrow]
 
 
 def binding_line(node1, node2):
@@ -55,8 +68,8 @@ def plotShape(shape, ax, pos=np.array([0, 0]), rot=0):
 
     # Plot all of the nodes:
     for node in shape.nodes:
-        nodeArtist = makeArtist(node, pos, rot)
-        for artist in nodeArtist:
+        nodeArtists = makeArtist(node, shape.nodeAngles[node.ID], pos, rot)
+        for artist in nodeArtists:
             ax.add_artist(artist)
 
     # Plot the lines
