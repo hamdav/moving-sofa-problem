@@ -9,10 +9,14 @@ from LineMath import arcsIntersect
 
 class Node:
     def __init__(self, pos, radius, orientation, ID=0):
-        # X and Y position on center
+        # X and Y position of center
         self.pos = np.array(pos)
+
         # Radius
+        if radius <= 0:
+            raise ValueError(f"radius is {radius}")
         self.r = radius
+
         # Orientation (+1 or -1) denotes which way around the boundry goes
         self.o = orientation
         self.ID = ID
@@ -25,12 +29,12 @@ class Node:
 
         # Generate positions within x- and ylim
         sizes = np.array([xlim[1] - xlim[0], ylim[1] - ylim[0]])
-        pos = np.random.random_sample(size=2) * sizes + [xlim[1], ylim[0]]
+        pos = np.random.random_sample(size=2) * sizes + [xlim[0], ylim[0]]
 
         # Generate radius such that constraints are upheld,
         # but not large than one half of the interval
         maximumRboundry = min(np.abs([pos[0] - xlim[0], pos[0] - xlim[1],
-                              pos[1] - ylim[0], pos[1] - ylim[1]]))
+                                      pos[1] - ylim[0], pos[1] - ylim[1]]))
         maximumRfraction = min(xlim[1] - xlim[0], ylim[1] - ylim[0])/2
         maximumR = min(maximumRboundry, maximumRfraction)
         r = np.random.random_sample() * maximumR
@@ -126,7 +130,7 @@ class Shape:
 
         # Generate two nodes with positive orientation as a start
         self._nodes = [Node.randomNode(xlim, ylim, 1),
-                      Node.randomNode(xlim, ylim, 1)]
+                       Node.randomNode(xlim, ylim, 1)]
 
         # Keep track of the tries, don't make too many
         tries = 0
@@ -142,7 +146,6 @@ class Shape:
             tries += 1
             # If we've tried more than 500 times, start over
             if tries > maxTries:
-                print(f"We're going deeper (noOfNodes was {noOfNodes})")
                 self.__setNodesRandom(xlim, ylim)
                 return
 
@@ -150,7 +153,8 @@ class Shape:
 
     def mutateInPlace(self, bigMutations=False):
         """
-        Returns a mutated copy of shape.
+        Mutates shape in place
+        returns self, (an iterable because of deap reasons)
 
         If bigMutations is True, number of nodes
         and orientation can be changed
@@ -199,10 +203,11 @@ class Shape:
             if np.random.random_sample() < mutateNoProb:
                 # NodeID for node before which to insert new node
                 nodeID = np.random.choice(len(self._nodes))
-                newNodePos = (self._nodes[nodeID].pos + self._nodes[nodeID-1].pos)/2.0
+                newNodePos = (self._nodes[nodeID].pos +
+                              self._nodes[nodeID-1].pos)/2.0
                 # r is at least 0.01 and expected around 0.1
-                newNodeR = np.abs(np.random.normal(0.1,0.05)) + 0.01
-                newNodeO = np.random.choice([-1,1])
+                newNodeR = np.abs(np.random.normal(0.1, 0.05)) + 0.01
+                newNodeO = np.random.choice([-1, 1])
                 newNode = Node(newNodePos, newNodeR, newNodeO, nodeID)
                 self._nodes.insert(nodeID, newNode)
 
@@ -243,19 +248,19 @@ class Shape:
         """
 
         # No consecutive nodes can be inside each other
-        # No consecutive nodes of opposite orientation 
+        # No consecutive nodes of opposite orientation
         # can intersect
         for nodeIndex in range(len(self._nodes)):
             node1 = self._nodes[nodeIndex]
             node2 = self._nodes[nodeIndex-1]
             dist = np.linalg.norm(node1.pos - node2.pos)
-            if dist + node1.r < node2.r:
+            if dist + node1.r <= node2.r:
                 return False
-            if dist + node2.r < node1.r:
+            if dist + node2.r <= node1.r:
                 return False
             if node1.o != node2.o:
                 # They cannot intersect
-                if dist < node1.r + node2.r:
+                if dist <= node1.r + node2.r:
                     return False
         return True
 
@@ -342,7 +347,7 @@ class Shape:
 
     def __calculateBindingLines(self):
         N = len(self._nodes)
-        self._lines = np.empty((N,2,2))
+        self._lines = np.empty((N, 2, 2))
         for nodeIndex in range(N):
             node1 = self._nodes[nodeIndex]
             node2 = self._nodes[(nodeIndex+1) % N]
@@ -426,4 +431,3 @@ class Shape:
 
         # Add the circleSectorAreas
         self._area = area + circleSectorAreas
-
