@@ -327,14 +327,26 @@ def shapeIsValid(shape):
     while True:
         deltaPosRot = posRotToShiftRightWithRot(shape, pos, rot)
 
+        # If it can't be done, return False
         if deltaPosRot is None:
             return False
-        else:
-            pos += deltaPosRot[0]
-            rot += deltaPosRot[1]
+        # If the rotation is too big,
+        # go back until we can rotate a little instead
+        elif deltaPosRot[1] > 0.02:
+            deltaPosRot = posRotToRotateCWWithShift(shape, pos, rot)
+
+            # If it can't be done, return False
+            if deltaPosRot is None:
+                return False
+
+        pos += deltaPosRot[0]
+        rot += deltaPosRot[1]
 
         if isThrough(shape, pos, rot):
             return True
+        # If we've rotated more than one full revolution, return false
+        elif abs(rot) > 2 * np.pi:
+            return False
 
 
 def getWalk(shape):
@@ -372,17 +384,45 @@ def getWalk(shape):
 
     while True:
         deltaPosRot = posRotToShiftRightWithRot(shape, pos, rot)
-        # print(deltaPosRot)
 
+        # If it can't be done, return
         if deltaPosRot is None:
             return (poss, rots)
-        else:
-            pos += deltaPosRot[0]
-            rot += deltaPosRot[1]
-            poss.append(pos.copy())
-            rots.append(rot)
+
+        # If the rotation is too big,
+        # go back until we can rotate a little instead
+        elif deltaPosRot[1] < -0.02:
+            deltaPosRot = posRotToRotateCWWithShift(shape, pos, rot)
+
+            # If it can't be done, return
+            if deltaPosRot is None:
+                return (poss, rots)
+
+            # If the jump in position is large, split it up
+            if deltaPosRot[0][0] < -0.05:
+                for x in np.arange(pos[0], pos[0] + deltaPosRot[0][0], -0.05):
+                    poss.append([x, pos[1]])
+                    rots.append(rot)
+
+        pos += deltaPosRot[0]
+        rot += deltaPosRot[1]
+        poss.append(pos.copy())
+        rots.append(rot)
 
         if isThrough(shape, pos, rot):
+            # Move right until through the last part
+            rightNode = shape.nodes[getRightNodeId(shape, pos, rot)]
+            minimumX = np.matmul(rotMat(rot), rightNode.pos)[0] + \
+                pos[0] - rightNode.r
+
+            for x in np.arange(pos[0], pos[0] + 0.5 - minimumX + 0.05, 0.05):
+                poss.append([x, pos[1]])
+                rots.append(rot)
+
+            return (poss, rots)
+
+        # If we've rotated more than one full revolution, return
+        elif abs(rot) > 2 * np.pi:
             return (poss, rots)
 
 
