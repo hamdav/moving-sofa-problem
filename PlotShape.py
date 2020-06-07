@@ -85,6 +85,20 @@ def showShape(shape, pos=np.array([0, 0]), rot=0):
     fig, ax = plt.subplots()
 
     plotShape(shape, ax, pos, rot)
+    ax.set_ylim(-4, 1)
+    ax.set_xlim(-1, 2)
+    ax.plot([0.5, 0.5, 2], [-4, -0.5, -0.5], 'k')
+    ax.plot([-0.5, -0.5, 2], [-4, 0.5, 0.5], 'k')
+    ax.set_title(f"inBounds: {isInBounds(shape, pos, rot)}")
+
+    plt.show()
+
+def saveShape(shape, pos=np.array([0, 0]), rot=0):
+    "Saves fig of shape"
+
+    fig, ax = plt.subplots()
+
+    plotShape(shape, ax, pos, rot)
     ax.set_ylim(-2, 2)
     ax.set_xlim(-2, 2)
     ax.plot([0.5, 0.5, 2], [-2, -0.5, -0.5], 'k')
