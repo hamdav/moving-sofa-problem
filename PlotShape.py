@@ -108,7 +108,7 @@ def saveShape(shape, pos=np.array([0, 0]), rot=0):
     plt.show()
 
 
-def animateWalk(shape, poss, rots):
+def animateWalk(shape, poss, rots, filename='walk'):
     "Saves an animation of the walk specified by poss and rots"
 
     # Create figure and axis
@@ -129,4 +129,4 @@ def animateWalk(shape, poss, rots):
     Writer = animation.writers['imagemagick']
     writer = Writer(fps=15, bitrate=1800)
 
-    anim.save('walk.gif', writer=writer)
+    anim.save(f"{filename}.gif", writer=writer)
