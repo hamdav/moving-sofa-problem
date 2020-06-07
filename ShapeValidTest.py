@@ -18,60 +18,91 @@ def isThrough(shape, pos, rot):
     (in the positive direction) by rot is through the corridor
     """
 
+    # Tolerance to remove funky business with machine precision errors
+    tol = 1e-13
+
+    # Make lines
+    lowerLine = np.array([[-0.5, -0.5 - tol], [100, -0.5 - tol]])
+    upperLine = np.array([[-0.5, 0.5 + tol], [100, 0.5 + tol]])
+    leftyLine = np.array([[-0.5 - tol, -0.5], [-0.5 - tol,  0.5]])
+
     for node in shape.nodes:
-        # if node is outside shape, continue
-        if not node.o == shape.o:
-            continue
-        if (np.matmul(rotMat(rot), node.pos) + pos)[1] - node.r < -0.5:
+        # Calculate the position of the node
+        nodePos = np.matmul(rotMat(rot), node.pos) + pos
+
+        # Check if the relevant part of the node intersects the lines
+        if segmentIntersectsArc(lowerLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
+        if segmentIntersectsArc(upperLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
+        if segmentIntersectsArc(leftyLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
             return False
 
-    # No node (after trasposition and rotation) was below -0.5
+    # No nodes are bad if you got here
+    # Now test if any of the binding lines cross the lines
+    for line in shape.lines:
+        # Shift line
+        line = np.array(
+            [np.matmul(rotMat(rot), point) + pos for point in line])
+        # Check if line crosses the inner line
+        if linesIntersect(line, lowerLine):
+            return False
+        if linesIntersect(line, upperLine):
+            return False
+        if linesIntersect(line, leftyLine):
+            return False
+
+    # All tests passed, the shape is in bounds
     return True
 
 
 def isInBounds(shape, pos, rot):
     "Returns True if no part of shape is outside of corridor"
 
-    # Facts used: There is no need to check if lines cross the outer border,
-    # if they did, that necessarily means a node is outside the outer border
+    # Tolerance to remove funky business with machine precision errors
+    tol = 1e-13
+
+    # Make lines
+    innerLowerLine = np.array([[0.5 + tol, -0.5], [0.5 + tol, -100]])
+    innerUpperLine = np.array([[0.5, -0.5 - tol], [100, -0.5 - tol]])
+    outerLowerLine = np.array([[-0.5 - tol, 0.5], [-0.5 - tol, -100]])
+    outerUpperLine = np.array([[-0.5, 0.5 + tol], [100,  0.5 + tol]])
 
     for node in shape.nodes:
         # Calculate the position of the node
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
-        # If the node is inside the shape
-        if node.o == shape.o:
-            # If node is outside outer bounds
-            if nodePos[1] + node.r > 0.5 or nodePos[0] - node.r < -0.5:
-                return False
-            # If the inner corner (0.5,-0.5) is inside node
-            cornerPos = np.array([0.5, -0.5])
-            if np.linalg.norm(nodePos-cornerPos) < node.r:
-                return False
-            # If the node is below the corner and outside inner line
-            if nodePos[1] < -0.5 and nodePos[0] + node.r > 0.5:
-                return False
-            # If the node is past the corner and below inner line
-            if nodePos[0] > 0.5 and nodePos[1] - node.r < -0.5:
-                return False
-        # If node is outside the shape
-        # An outside node can never be causing trouble at the outer wall
-        else:
-            # If arc of node intersects lower inner line,
-            # TODO No need to check upper inner line?
-            innerLine = np.array([[0.5, -0.5], [0.5, -100]])
-            if segmentIntersectsArc(innerLine, nodePos, node.r,
-                                    shape.nodeAngles[node.ID] + rot, node.o):
-                return False
+
+        # Check if the relevant part of the node intersects the lines
+        if segmentIntersectsArc(innerLowerLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
+        if segmentIntersectsArc(innerUpperLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
+        if segmentIntersectsArc(outerLowerLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
+        if segmentIntersectsArc(outerUpperLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            return False
 
     # No nodes are bad if you got here
-    # Now test if any of the binding lines cross the inner line
-    innerLine = np.array([[0.5, -100], [0.5, -0.5]])
+    # Now test if any of the binding lines cross the lines
     for line in shape.lines:
         # Shift line
         line = np.array(
             [np.matmul(rotMat(rot), point) + pos for point in line])
         # Check if line crosses the inner line
-        if linesIntersect(line, innerLine):
+        if linesIntersect(line, innerLowerLine):
+            return False
+        if linesIntersect(line, innerUpperLine):
+            return False
+        if linesIntersect(line, outerLowerLine):
+            return False
+        if linesIntersect(line, outerUpperLine):
             return False
 
     # All tests passed, the shape is in bounds
@@ -97,26 +128,49 @@ def nodesOutOfBounds(shape, pos, rot):
     # precision magnitude of errors
     tol = 1e-13
 
-    for node in shape.nodes:
-        # If node is not an inside node, continue
-        if node.o != shape.o:
-            continue
+    # Make lines
+    innerLowerLine = np.array([[0.5 + tol, -0.5], [0.5 + tol, -100]])
+    innerUpperLine = np.array([[0.5, -0.5 - tol], [100, -0.5 - tol]])
+    outerLowerLine = np.array([[-0.5 - tol, 0.5], [-0.5 - tol, -100]])
+    outerUpperLine = np.array([[-0.5, 0.5 + tol], [100,  0.5 + tol]])
 
+    for node in shape.nodes:
+        # Calculate the position of the node
         nodePos = np.matmul(rotMat(rot), node.pos) + pos
 
-        if nodePos[1] + node.r > 0.5 + tol:
-            rvList.append([node.ID, 1])
-        if nodePos[0] - node.r < -0.5 - tol:
+        intersectFound = False
+        # Check if the relevant part of the node intersects the lines
+        if segmentIntersectsArc(innerLowerLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            rvList.append([node.ID, 4])
+            intersectFound = True
+        if segmentIntersectsArc(innerUpperLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            rvList.append([node.ID, 4])
+            intersectFound = True
+        if segmentIntersectsArc(outerLowerLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
             rvList.append([node.ID, 3])
-        if nodePos[0] - node.r < -0.5 - tol and \
-                nodePos[1] + node.r > 0.5 + tol:
-            rvList.append([node.ID, 2])
-        if nodePos[0] + node.r > 0.5 + tol and nodePos[1] <= -0.5:
-            rvList.append([node.ID, 4])
-        elif nodePos[1] - node.r < -0.5 - tol and nodePos[0] >= 0.5:
-            rvList.append([node.ID, 4])
-        elif np.linalg.norm(nodePos - np.array([0.5, -0.5])) < node.r + tol:
-            rvList.append([node.ID, 4])
+            intersectFound = True
+        if segmentIntersectsArc(outerUpperLine, nodePos, node.r,
+                                shape.nodeAngles[node.ID] + rot, node.o):
+            rvList.append([node.ID, 1])
+            intersectFound = True
+        if not intersectFound:
+            # Calculate an endpoint (if no intersect was found,
+            # both endpoints are either out of bounds or in bounds)
+            endpoint = nodePos + \
+                np.array([np.cos(shape.nodeAngles[node.ID][0] + rot),
+                          np.sin(shape.nodeAngles[node.ID][0] + rot)]) * node.r
+
+            if endpoint[1] > 0.5 + tol:
+                rvList.append([node.ID, 1])
+            if endpoint[0] < -0.5 - tol:
+                rvList.append([node.ID, 3])
+            if endpoint[0] < -0.5 - tol and endpoint[1] > 0.5 + tol:
+                rvList.append([node.ID, 2])
+            if endpoint[0] > 0.5 + tol and endpoint[1] <= -0.5:
+                rvList.append([node.ID, 4])
 
     return rvList
 
@@ -210,7 +264,7 @@ def shapeIsValid(shape):
     topNode = shape.nodes[getTopNodeId(shape)]
     maximumY = topNode.pos[1] + topNode.r
     rightNode = shape.nodes[getRightNodeId(shape)]
-    minimumX = rightNode.pos[0] - topNode.r
+    minimumX = rightNode.pos[0] - rightNode.r
 
     # Place shape as far up and as far left as possible
     pos = [-0.5 - minimumX, 0.5 - maximumY]
@@ -248,7 +302,7 @@ def getWalk(shape):
     topNode = shape.nodes[getTopNodeId(shape)]
     maximumY = topNode.pos[1] + topNode.r
     rightNode = shape.nodes[getRightNodeId(shape)]
-    minimumX = rightNode.pos[0] - topNode.r
+    minimumX = rightNode.pos[0] - rightNode.r
 
     # Place shape as far left as possible and below the starting line
     pos = [-0.5 - minimumX, -0.5 - maximumY]
