@@ -254,6 +254,52 @@ def posRotToShiftRightWithRot(shape, pos, rot):
     return (newPos - pos, newRot - rot)
 
 
+def posRotToRotateCWWithShift(shape, pos, rot):
+    """
+    Returns the deltapos and deltarot required to rotate shape CW
+    by stepRot
+    If it isn't possible, returns None.
+    """
+    stepMove = 0.01
+    stepRot = -0.01
+
+    newPos = pos.copy()
+    newRot = rot
+
+    # Rotate shape cw by stepRot around top node
+    topNodeID = getTopNodeId(shape, newPos, rot)
+    deltaPos, deltaRot = posRotToRotateAroundNode(
+        shape, newRot, stepRot, topNodeID)
+    newPos += deltaPos
+    newRot += deltaRot
+
+    # if some other node is now top node,
+    # shift down so that that node is in bounds
+    newTopNodeID = getTopNodeId(shape, newPos, newRot)
+    if newTopNodeID != topNodeID:
+        maximumY = (np.matmul(rotMat(newRot), shape.nodes[newTopNodeID].pos) +
+                    pos)[1] + shape.nodes[newTopNodeID].r
+        newPos[1] = 0.5 - maximumY
+
+    # While shape is out of bounds, move back until it isn't
+    # or it has gone out of bounds in Q III
+    while not isInBounds(shape, newPos, newRot):
+
+        # Check all of the out of bounds (inside) nodes
+        for nodeWithQuadrant in nodesOutOfBounds(shape,
+                                                 newPos - [stepMove, 0],
+                                                 newRot):
+
+            # If anyone is out in quadrant III, the game is lost
+            # because then we can't back up more
+            if nodeWithQuadrant[1] == 3:
+                return None
+        else:     # If for loop not broken
+            newPos -= [stepMove, 0]
+
+    return (newPos - pos, newRot - rot)
+
+
 def shapeIsValid(shape):
     """
     Returns true if shape can be moved through a corridor with
