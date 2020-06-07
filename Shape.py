@@ -239,6 +239,35 @@ class Shape:
                     self._nodes[nodeID].o *= -1
                     self.__recalculate()
 
+        return self,
+
+    def mate(self, other):
+        """
+        Mate two sofas with each other in place,
+        returns reference to self and other
+
+        Switch a random number of nodes between self and other.
+        It is always the tail of the nodes that get switched.
+        """
+
+        lenSelf = len(self._nodes)
+        lenOther = len(other._nodes)
+
+        breakpointSelf = np.random.randint(3, lenSelf)
+        breakpointOther = np.random.randint(3, lenOther)
+
+        newNodesSelf = self._nodes[:breakpointSelf].copy() + \
+            other._nodes[breakpointOther:].copy()
+        newNodesOther = other._nodes[:breakpointOther].copy() + \
+            self._nodes[breakpointSelf:].copy()
+
+        self._nodes = newNodesSelf
+        self.__recalculate()
+        other._nodes = newNodesOther
+        other.__recalculate()
+
+        return self, other
+
     def __nodePositionsIsValid(self):
         """"
         Checks the simple validity of shape
