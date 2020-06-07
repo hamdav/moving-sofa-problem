@@ -25,7 +25,7 @@ class Node:
     def randomNode(xlim=(-0.5, 0.5), ylim=(-0.5, 0.5), o=None):
         # Generate orientation
         if o is None:
-            o = np.random.randint(1) * 2 - 1
+            o = np.random.randint(2) * 2 - 1
 
         # Generate positions within x- and ylim
         sizes = np.array([xlim[1] - xlim[0], ylim[1] - ylim[0]])
@@ -138,7 +138,7 @@ class Shape:
         # Generate nodes
         while len(self._nodes) < noOfNodes:
             newNode = Node.randomNode(xlim, ylim)
-            self._nodes.append(newNode)
+            self._nodes.insert(np.random.randint(len(self._nodes)), newNode)
             self.__recalculate()
             if not self.valid:
                 self._nodes.pop()
