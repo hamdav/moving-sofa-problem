@@ -39,7 +39,7 @@ toolbox.register('population', tools.initRepeat, list, toolbox.individual)
 
 
 # Define the evaluation function
-def evalOneMax(individual):
+def evalByArea(individual):
     if not individual.valid:
         return 0,
     elif not shapeIsValid(individual):
@@ -48,8 +48,24 @@ def evalOneMax(individual):
         return individual.area,
 
 
+def evalByValidity(individual):
+    if not individual.valid:
+        return 0,
+    elif not shapeIsValid(individual):
+        return 0,
+    else:
+        return individual.area,
+
+
+def evaluateInd(individual, goodTimes=False):
+    if not goodTimes:
+        return evalByArea(individual)
+    else:
+        return evalByValidity(individual)
+
+
 # Let's define som genetic operators
-toolbox.register('evaluate', evalOneMax)
+toolbox.register('evaluate', evaluateInd)
 toolbox.register('mate', Shape.mate)
 toolbox.register('mutate', Shape.mutateInPlace)
 toolbox.register('select', tools.selTournament, tournsize=2)
@@ -59,7 +75,7 @@ toolbox.register('select', tools.selTournament, tournsize=2)
 def main(maxGen, filename=None):
     # - - - Initial setup - - -
     # Create multiprocessing pool
-    pool = mp.Pool(processes=3)
+    pool = mp.Pool(processes=1)
 
     # Create the population
     print(f"Creating population ({time.time() - timeStart:.0f} seconds in)")
@@ -115,9 +131,22 @@ def main(maxGen, filename=None):
         # Add the top dog
         offspring.append(topDog)
 
-        # Some fitness values are now invalid, evaluate these
+        # If times are good (happens for ten generations every 20 generations)
+        # then don't select based on area, just abillity to pass the corner
+        goodTimes = (g % 20) >= 10
+        timesAreChanging = (g % 10) == 0
+
+        # If times are changing from good to bad or the other way around
+        # All fitnesses must be recalculated.
+        if timesAreChanging:
+            for ind in offspring:
+                del ind.fitness.values
+
+        # Calculate fitnesses (some may already be calculated, in that case
+        # there is no need to recalculate them)
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = pool.map(toolbox.evaluate, invalid_ind)
+        fitnesses = pool.map(lambda ind: toolbox.evaluate(ind, goodTimes),
+                             invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
