@@ -6,6 +6,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import multiprocessing as mp
 
 import colorama
 
@@ -57,6 +58,8 @@ toolbox.register('select', tools.selTournament, tournsize=2)
 # Now we write the main program
 def main(maxGen, filename=None):
     # - - - Initial setup - - -
+    # Create multiprocessing pool
+    pool = mp.Pool(processes=3)
 
     # Create the population
     print(f"Creating population ({time.time() - timeStart:.0f} seconds in)")
@@ -70,12 +73,12 @@ def main(maxGen, filename=None):
 
     # Evaluate the entire population
     print(f"Evaluating fitnesses ({time.time() - timeStart:.0f} seconds in)")
-    fitnesses = list(map(toolbox.evaluate, pop))
+    fitnesses = list(pool.map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
 
     # Probability of mating and mutation
-    MatePB, MutatePB = 0.2, 1.0
+    MatePB, MutatePB = 0.5, 1.0
 
     # Extract all of the fitnesses
     fits = [ind.fitness.values[0] for ind in pop]
@@ -92,7 +95,9 @@ def main(maxGen, filename=None):
         print(f"({time.time() - timeStart:.0f} seconds in)")
 
         # Select the next generation
-        offspring = toolbox.select(pop, len(pop))
+        offspring = toolbox.select(pop, len(pop)-1)
+        # Remember the best guy
+        topDog = pop[np.argmax(fits)]
         # Clone the individuals (ensures no pass by reference funky business
         offspring = list(map(toolbox.clone, offspring))
 
@@ -107,9 +112,12 @@ def main(maxGen, filename=None):
                 toolbox.mutate(mutant)
                 del mutant.fitness.values
 
+        # Add the top dog
+        offspring.append(topDog)
+
         # Some fitness values are now invalid, evaluate these
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+        fitnesses = pool.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
@@ -123,16 +131,16 @@ def main(maxGen, filename=None):
 
         length = len(pop)
         mean = sum(fits) / length
-        q25, q50, q75 = np.quantile(fits, [0.25, 0.5, 0.75])
+        quantiles = np.quantile(fits, np.arange(0.1, 1.0, 0.1))
         zeros = fits.count(0)/len(fits) * 100
 
 
         # print(f"  Min {min(fits):.3f}")
         print(f"  Max {max(fits):.3f}")
         print(f"  Avg {mean:.3f}")
-        print(f"  Quantiles - 25:{q25:.3f}, 50:{q50:.3f}, 75:{q75:.3f}")
+        print(f"  Quantiles - 20:{quantiles[1]:.3f}, 50:{quantiles[4]:.3f}, 80:{quantiles[7]:.3f}")
         print(f"  Zeros {zeros:.0f} %")
-        stats.append({"g": g, "avg": mean, "q25": q25, "q50": q50, "q75": q75,
+        stats.append({"g": g, "avg": mean, "qs": quantiles,
                       "max": max(fits)})
 
     print(f"Pickling pop ({time.time() - timeStart:.0f} seconds in)")
@@ -157,9 +165,9 @@ def viewResults(filename):
     for fit in fits:
         if fit == stats[-1]['max']:
             print(f'{colorama.Back.GREEN} {index:03d}: {fit:.3f} {colorama.Style.RESET_ALL} |', end='')
-        elif fit > stats[-1]['q75']:
+        elif fit > stats[-1]['qs'][7]:
             print(f'{colorama.Fore.GREEN} {index:03d}: {fit:.3f} {colorama.Style.RESET_ALL} |', end='')
-        elif fit > stats[-1]['q25'] + 0.001:
+        elif fit > stats[-1]['qs'][1] + 0.001:
             print(f' {index:03d}: {fit:.3f} {colorama.Style.RESET_ALL} |', end='')
         else:
             print(f'{colorama.Fore.RED} {index:03d}: {fit:.3f} {colorama.Style.RESET_ALL} |', end='')
@@ -169,13 +177,11 @@ def viewResults(filename):
 
     # - - - Plot progression - - -
     fig, ax = plt.subplots()
-    q50s = [stat['q50'] for stat in stats]
-    q25s = [stat['q25'] for stat in stats]
-    q75s = [stat['q75'] for stat in stats]
     maxs = [stat['max'] for stat in stats]
-    ax.plot(q50s, color='blue')
-    ax.plot(q25s, color='grey', linestyle='--')
-    ax.plot(q75s, color='grey', linestyle='--')
+    qs = [stat['qs'] for stat in stats]
+
+    ax.plot(qs, color='grey', linestyle='-')
+    ax.plot([q[4] for q in qs], color='blue', linestyle='-')
     ax.plot(maxs, color='red')
     plt.show()
 
@@ -194,5 +200,5 @@ def viewResults(filename):
 
 
 
-main(20)  # , "population.pkl")
-viewResults("population.pkl")
+#main(20, 'population.pkl')  # , "population.pkl")
+viewResults("pop.pkl")
